@@ -9,6 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
+public import Property_Primitives
+
 extension Range {
     /// A lazy range that produces `~Copyable` bounds on-demand.
     ///
@@ -16,22 +18,33 @@ extension Range {
     /// function to produce typed bounds. This enables range-based iteration over
     /// `~Copyable` types without requiring `Sequence` conformance.
     ///
+    /// ## Why Not Sequence?
+    ///
+    /// `Range.Lazy` does not conform to `Sequence.Protocol` because:
+    /// - `Sequence.Protocol.Element` implicitly requires `Copyable` (per SE-0427)
+    /// - `Range.Lazy<Bound>` is designed for `Bound: ~Copyable`
+    ///
+    /// Instead, use the closure-based `.forEach` and `.drain` patterns.
+    ///
     /// ## Iteration Patterns
     ///
-    /// Since `~Copyable` types cannot conform to `Sequence`, use closure-based
-    /// iteration instead of `for-in`:
-    ///
     /// ```swift
-    /// let range = Range.Lazy(0..<count) { Index(__unchecked: (), position: $0) }
+    /// var range = Range.Lazy(0..<count) { Index(__unchecked: (), position: $0) }
     ///
-    /// // Borrowing iteration
+    /// // Borrowing iteration (range survives)
     /// range.forEach { index in
     ///     print(index)
     /// }
     ///
-    /// // Consuming iteration
+    /// // Consuming iteration (range becomes empty)
     /// range.drain { index in
     ///     consume(index)
+    /// }
+    ///
+    /// // Reversed iteration
+    /// var reversed = range.reversed()
+    /// reversed.forEach { index in
+    ///     print(index)  // Prints in reverse order
     /// }
     ///
     /// // Manual iteration
@@ -43,15 +56,15 @@ extension Range {
     ///
     /// ## Design Note
     ///
-    /// The `Iterator` type is declared inline (not in an extension) so that it
-    /// properly inherits the `~Copyable` constraint from `Bound`. This matches
-    /// the pattern used by `Array.Static` and `Array.Storage`.
-    public struct Lazy<Bound: ~Copyable>: ~Copyable {
+    /// The `Iterator` and `Reversed` types are declared inline (not in extensions)
+    /// so that they properly inherit the `~Copyable` constraint from `Bound`. This
+    /// matches the pattern used by `Array.Static` and `Array.Storage`.
+    public struct Lazy<Bound: ~Copyable> {
         @usableFromInline
-        let start: Int
+        var start: Int
 
         @usableFromInline
-        let end: Int
+        var end: Int
 
         @usableFromInline
         let transform: @Sendable (Int) -> Bound
@@ -88,6 +101,151 @@ extension Range {
             }
         }
 
+        // MARK: - Nested Reversed
+
+        /// A reversed view of a lazy range.
+        ///
+        /// Iterates from `end-1` down to `start` (inclusive on both ends in the
+        /// transformed result).
+        ///
+        /// ## Usage
+        ///
+        /// ```swift
+        /// var range = Range.Lazy(0..<5) { Index(__unchecked: (), position: $0) }
+        /// var reversed = range.reversed()
+        /// reversed.forEach { print($0) }
+        /// // Prints indices for positions: 4, 3, 2, 1, 0
+        /// ```
+        ///
+        /// ## Iteration Order
+        ///
+        /// For a range `0..<n`, the reversed range yields positions in order:
+        /// `n-1, n-2, ..., 1, 0`
+        ///
+        /// ## Design Note
+        ///
+        /// Declared inline (not in extension) to inherit `Bound: ~Copyable`
+        /// from the outer type.
+        public struct Reversed {
+            @usableFromInline
+            var start: Int
+
+            @usableFromInline
+            var end: Int
+
+            @usableFromInline
+            let transform: @Sendable (Int) -> Bound
+
+            /// Iterator for `Range.Lazy.Reversed`.
+            public struct Iterator: ~Copyable {
+                @usableFromInline
+                var current: Int
+
+                @usableFromInline
+                let start: Int
+
+                @usableFromInline
+                let transform: @Sendable (Int) -> Bound
+
+                @inlinable
+                init(current: Int, start: Int, transform: @escaping @Sendable (Int) -> Bound) {
+                    self.current = current
+                    self.start = start
+                    self.transform = transform
+                }
+
+                /// Advances to the next element and returns it, or `nil` if exhausted.
+                @inlinable
+                public mutating func next() -> Bound? {
+                    guard current >= start else { return nil }
+                    defer { current -= 1 }
+                    return transform(current)
+                }
+            }
+
+            @inlinable
+            init(start: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
+                self.start = start
+                self.end = end
+                self.transform = transform
+            }
+
+            /// The number of elements in the range.
+            @inlinable
+            public var count: Int { end - start }
+
+            /// A Boolean value indicating whether the range is empty.
+            @inlinable
+            public var isEmpty: Bool { start >= end }
+
+            /// Returns an iterator over the range elements in reverse order.
+            ///
+            /// The range is consumed by this operation.
+            @inlinable
+            public consuming func makeIterator() -> Iterator {
+                Iterator(current: end - 1, start: start, transform: transform)
+            }
+
+            // MARK: - Internal Iteration
+
+            @inlinable
+            mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
+                var i = end - 1
+                while i >= start {
+                    let bound = transform(i)
+                    body(bound)
+                    i -= 1
+                }
+            }
+
+            @inlinable
+            mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
+                var i = end - 1
+                while i >= start {
+                    body(transform(i))
+                    i -= 1
+                }
+                // Mark as empty
+                start = end
+            }
+
+            // MARK: - Property Accessors
+
+            /// Access to `.forEach` operations.
+            ///
+            /// ```swift
+            /// // Works on temporaries
+            /// range.reversed().forEach { print($0) }
+            ///
+            /// // Fluent API
+            /// range.reversed().forEach.borrowing { print($0) }
+            /// ```
+            @inlinable
+            public var forEach: Property<Range.ForEach, Self> {
+                Property(self)
+            }
+
+            /// Access to `.drain` operations.
+            ///
+            /// Requires a mutable binding because drain empties the range.
+            ///
+            /// ```swift
+            /// var reversed = Range.Lazy(0..<10) { $0 }.reversed()
+            /// reversed.drain { consume($0) }
+            /// // reversed is now empty
+            /// ```
+            @inlinable
+            public var drain: Property<Range.Drain, Self>.View {
+                mutating _read {
+                    yield unsafe Property<Range.Drain, Self>.View(&self)
+                }
+                mutating _modify {
+                    var view = unsafe Property<Range.Drain, Self>.View(&self)
+                    yield &view
+                }
+            }
+        }
+
         // MARK: - Initializers
 
         /// Creates a lazy range with the given integer bounds and transformation.
@@ -112,7 +270,7 @@ extension Range {
         @inlinable
         public var isEmpty: Bool { start >= end }
 
-        // MARK: - Iteration Methods
+        // MARK: - Iterator Factory
 
         /// Returns an iterator over the range elements.
         ///
@@ -122,30 +280,75 @@ extension Range {
             Iterator(current: start, end: end, transform: transform)
         }
 
-        /// Calls the given closure on each element in the range.
+        // MARK: - Reversed Factory
+
+        /// Returns a reversed view of this range.
         ///
-        /// The closure receives each element as a borrowed value.
-        /// The range is consumed by this operation.
+        /// The reversed range iterates from `end-1` down to `start`.
         ///
-        /// - Parameter body: A closure that takes a borrowed element.
+        /// ```swift
+        /// var range = Range.Lazy(0..<5) { Index(__unchecked: (), position: $0) }
+        /// var reversed = range.reversed()
+        /// reversed.forEach { print($0) }
+        /// // Prints indices for positions: 4, 3, 2, 1, 0
+        /// ```
         @inlinable
-        public consuming func forEach(_ body: (borrowing Bound) -> Void) {
+        public consuming func reversed() -> Reversed {
+            Reversed(start: start, end: end, transform: transform)
+        }
+
+        // MARK: - Internal Iteration
+
+        @inlinable
+        mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
             for i in start..<end {
                 let bound = transform(i)
                 body(bound)
             }
         }
 
-        /// Calls the given closure on each element, consuming each element.
-        ///
-        /// The closure receives each element as an owned value.
-        /// The range is consumed by this operation.
-        ///
-        /// - Parameter body: A closure that takes ownership of each element.
         @inlinable
-        public consuming func drain(_ body: (consuming Bound) -> Void) {
+        mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
             for i in start..<end {
                 body(transform(i))
+            }
+            // Mark as empty
+            start = end
+        }
+
+        // MARK: - Property Accessors
+
+        /// Access to `.forEach` operations.
+        ///
+        /// ```swift
+        /// // Works on temporaries
+        /// (0..<count).forEach { print($0) }
+        ///
+        /// // Fluent API
+        /// (0..<count).forEach.borrowing { print($0) }
+        /// ```
+        @inlinable
+        public var forEach: Property<Range.ForEach, Self> {
+            Property(self)
+        }
+
+        /// Access to `.drain` operations.
+        ///
+        /// Requires a mutable binding because drain empties the range.
+        ///
+        /// ```swift
+        /// var range = Range.Lazy(0..<10) { Index(__unchecked: (), position: $0) }
+        /// range.drain { consume($0) }
+        /// // range is now empty
+        /// ```
+        @inlinable
+        public var drain: Property<Range.Drain, Self>.View {
+            mutating _read {
+                yield unsafe Property<Range.Drain, Self>.View(&self)
+            }
+            mutating _modify {
+                var view = unsafe Property<Range.Drain, Self>.View(&self)
+                yield &view
             }
         }
     }
@@ -155,3 +358,5 @@ extension Range {
 
 extension Range.Lazy: Sendable where Bound: Sendable {}
 extension Range.Lazy.Iterator: Sendable where Bound: Sendable {}
+extension Range.Lazy.Reversed: Sendable where Bound: Sendable {}
+extension Range.Lazy.Reversed.Iterator: Sendable where Bound: Sendable {}
