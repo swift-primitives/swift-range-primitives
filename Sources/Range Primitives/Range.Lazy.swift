@@ -187,7 +187,7 @@ extension Range {
                 }
             }
 
-            @inlinable
+            @usableFromInline
             init(start: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
                 self.start = start
                 self.end = end
@@ -281,6 +281,16 @@ extension Range {
         public init(_ range: Swift.Range<Int>, transform: @escaping @Sendable (Int) -> Bound) {
             self.start = range.lowerBound
             self.end = range.upperBound
+            self.transform = transform
+        }
+
+        /// Internal initializer for direct bounds construction.
+        ///
+        /// Used by Drop/Prefix operations to construct adjusted ranges in O(1).
+        @usableFromInline
+        init(start: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
+            self.start = start
+            self.end = end
             self.transform = transform
         }
 

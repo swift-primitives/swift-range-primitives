@@ -800,3 +800,381 @@ extension RangeLazyStressTests.Stress {
         }
     }
 }
+
+// MARK: - Drop/Prefix Tests
+
+enum RangeLazyDropPrefixTests {
+    @Suite struct Drop {}
+    @Suite struct Prefix {}
+    @Suite struct Chaining {}
+    @Suite struct Reversed {}
+}
+
+// MARK: - Drop Tests
+
+extension RangeLazyDropPrefixTests.Drop {
+
+    @Test("drop.first returns Range.Lazy with adjusted start (O(1))")
+    func dropFirst() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let dropped = range.drop.first(3)
+
+        // Verify it's still a lazy range with correct count
+        #expect(dropped.count == 7)
+
+        // Verify contents
+        var results: [Int] = []
+        var d = dropped
+        d.forEach { results.append($0) }
+        #expect(results == [3, 4, 5, 6, 7, 8, 9])
+    }
+
+    @Test("drop.first with count >= size returns empty range")
+    func dropFirstAll() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.drop.first(5).isEmpty)
+        #expect(range.drop.first(10).isEmpty)
+    }
+
+    @Test("drop.first(0) returns equivalent range")
+    func dropFirstZero() {
+        let range = Range.Lazy(0..<5) { $0 }
+        let dropped = range.drop.first(0)
+        #expect(dropped.count == 5)
+    }
+
+    @Test("drop.while returns array (O(n))")
+    func dropWhile() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.drop.while { $0 < 5 }
+        #expect(result == [5, 6, 7, 8, 9])
+    }
+
+    @Test("drop.while with always-true predicate returns empty array")
+    func dropWhileAll() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.drop.while { _ in true } == [])
+    }
+
+    @Test("drop.while with always-false predicate returns all elements")
+    func dropWhileNone() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.drop.while { _ in false } == [0, 1, 2, 3, 4])
+    }
+
+    @Test("drop.first with transform")
+    func dropFirstWithTransform() {
+        let range = Range.Lazy(0..<5) { $0 * 2 }
+        let dropped = range.drop.first(2)
+
+        var results: [Int] = []
+        var d = dropped
+        d.forEach { results.append($0) }
+        #expect(results == [4, 6, 8])
+    }
+}
+
+// MARK: - Prefix Tests
+
+extension RangeLazyDropPrefixTests.Prefix {
+
+    @Test("prefix.first returns Range.Lazy with adjusted end (O(1))")
+    func prefixFirst() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let prefixed = range.prefix.first(3)
+
+        // Verify it's still a lazy range with correct count
+        #expect(prefixed.count == 3)
+
+        // Verify contents
+        var results: [Int] = []
+        var p = prefixed
+        p.forEach { results.append($0) }
+        #expect(results == [0, 1, 2])
+    }
+
+    @Test("prefix.first with count >= size returns equivalent range")
+    func prefixFirstAll() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.prefix.first(5).count == 5)
+        #expect(range.prefix.first(10).count == 5)
+    }
+
+    @Test("prefix.first(0) returns empty range")
+    func prefixFirstZero() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.prefix.first(0).isEmpty)
+    }
+
+    @Test("prefix.while returns array (O(n))")
+    func prefixWhile() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.prefix.while { $0 < 5 }
+        #expect(result == [0, 1, 2, 3, 4])
+    }
+
+    @Test("prefix.while with always-true predicate returns all elements")
+    func prefixWhileAll() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.prefix.while { _ in true } == [0, 1, 2, 3, 4])
+    }
+
+    @Test("prefix.while with always-false predicate returns empty array")
+    func prefixWhileNone() {
+        let range = Range.Lazy(0..<5) { $0 }
+        #expect(range.prefix.while { _ in false } == [])
+    }
+
+    @Test("prefix.first with transform")
+    func prefixFirstWithTransform() {
+        let range = Range.Lazy(0..<5) { $0 * 2 }
+        let prefixed = range.prefix.first(3)
+
+        var results: [Int] = []
+        var p = prefixed
+        p.forEach { results.append($0) }
+        #expect(results == [0, 2, 4])
+    }
+}
+
+// MARK: - Chaining Tests
+
+extension RangeLazyDropPrefixTests.Chaining {
+
+    @Test("drop.first then prefix.first chains correctly (all O(1))")
+    func dropThenPrefix() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.drop.first(2).prefix.first(3)
+
+        #expect(result.count == 3)
+
+        var results: [Int] = []
+        var r = result
+        r.forEach { results.append($0) }
+        #expect(results == [2, 3, 4])
+    }
+
+    @Test("prefix.first then drop.first chains correctly")
+    func prefixThenDrop() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.prefix.first(5).drop.first(2)
+
+        #expect(result.count == 3)
+
+        var results: [Int] = []
+        var r = result
+        r.forEach { results.append($0) }
+        #expect(results == [2, 3, 4])
+    }
+
+    @Test("multiple drop.first calls accumulate correctly")
+    func multipleDrops() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.drop.first(2).drop.first(3)
+
+        #expect(result.count == 5)
+
+        var results: [Int] = []
+        var r = result
+        r.forEach { results.append($0) }
+        #expect(results == [5, 6, 7, 8, 9])
+    }
+
+    @Test("multiple prefix.first calls take minimum")
+    func multiplePrefixes() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let result = range.prefix.first(7).prefix.first(3)
+
+        #expect(result.count == 3)
+
+        var results: [Int] = []
+        var r = result
+        r.forEach { results.append($0) }
+        #expect(results == [0, 1, 2])
+    }
+
+    @Test("complex chaining maintains correct bounds")
+    func complexChaining() {
+        let range = Range.Lazy(0..<20) { $0 }
+        let result = range
+            .drop.first(5)      // 5..<20
+            .prefix.first(10)   // 5..<15
+            .drop.first(2)      // 7..<15
+            .prefix.first(5)    // 7..<12
+
+        #expect(result.count == 5)
+
+        var results: [Int] = []
+        var r = result
+        r.forEach { results.append($0) }
+        #expect(results == [7, 8, 9, 10, 11])
+    }
+}
+
+// MARK: - Reversed Tests
+
+extension RangeLazyDropPrefixTests.Reversed {
+
+    @Test("reversed drop.first skips from high end")
+    func reversedDropFirst() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let reversed = range.reversed()
+        let dropped = reversed.drop.first(3)
+
+        // Original: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+        // After drop.first(3): [6, 5, 4, 3, 2, 1, 0]
+        #expect(dropped.count == 7)
+
+        var results: [Int] = []
+        var d = dropped
+        d.forEach { results.append($0) }
+        #expect(results == [6, 5, 4, 3, 2, 1, 0])
+    }
+
+    @Test("reversed prefix.first takes from high end")
+    func reversedPrefixFirst() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let reversed = range.reversed()
+        let prefixed = reversed.prefix.first(3)
+
+        // Original: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+        // After prefix.first(3): [9, 8, 7]
+        #expect(prefixed.count == 3)
+
+        var results: [Int] = []
+        var p = prefixed
+        p.forEach { results.append($0) }
+        #expect(results == [9, 8, 7])
+    }
+
+    @Test("reversed drop.while works correctly")
+    func reversedDropWhile() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let reversed = range.reversed()
+
+        // Iteration order: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+        // Drop while > 5: drops 9, 8, 7, 6, keeps [5, 4, 3, 2, 1, 0]
+        let result = reversed.drop.while { $0 > 5 }
+        #expect(result == [5, 4, 3, 2, 1, 0])
+    }
+
+    @Test("reversed prefix.while works correctly")
+    func reversedPrefixWhile() {
+        let range = Range.Lazy(0..<10) { $0 }
+        let reversed = range.reversed()
+
+        // Iteration order: 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+        // Prefix while > 5: takes [9, 8, 7, 6]
+        let result = reversed.prefix.while { $0 > 5 }
+        #expect(result == [9, 8, 7, 6])
+    }
+
+    @Test("reversed empty range drop/prefix")
+    func reversedEmptyRange() {
+        let range = Range.Lazy(0..<0) { $0 }
+        let reversed = range.reversed()
+
+        #expect(reversed.drop.first(5).isEmpty)
+        #expect(reversed.prefix.first(5).isEmpty)
+        #expect(reversed.drop.while { _ in true } == [])
+        #expect(reversed.prefix.while { _ in true } == [])
+    }
+}
+
+// MARK: - Invariant Tests for Drop/Prefix
+
+enum RangeLazyDropPrefixInvariantTests {
+    @Suite struct Invariants {}
+}
+
+extension RangeLazyDropPrefixInvariantTests.Invariants {
+
+    @Test("INVARIANT: drop.first(n) + prefix.first(m) maintains correct total when m <= remaining")
+    func dropPrefixCountInvariant() {
+        for size in [0, 1, 5, 20, 100] {
+            for dropCount in [0, 1, size / 2, size, size + 5] {
+                let range = Range.Lazy(0..<size) { $0 }
+                let afterDrop = range.drop.first(dropCount)
+                let remaining = max(0, size - dropCount)
+
+                #expect(afterDrop.count == remaining,
+                       "Size \(size), drop \(dropCount): expected \(remaining), got \(afterDrop.count)")
+
+                for prefixCount in [0, 1, remaining / 2, remaining, remaining + 5] {
+                    let afterPrefix = afterDrop.prefix.first(prefixCount)
+                    let expected = min(prefixCount, remaining)
+
+                    #expect(afterPrefix.count == expected,
+                           "Size \(size), drop \(dropCount), prefix \(prefixCount): expected \(expected), got \(afterPrefix.count)")
+                }
+            }
+        }
+    }
+
+    @Test("INVARIANT: drop.first preserves transform")
+    func dropPreservesTransform() {
+        let range = Range.Lazy(0..<10) { $0 * 3 + 1 }
+        let dropped = range.drop.first(3)
+
+        var results: [Int] = []
+        var d = dropped
+        d.forEach { results.append($0) }
+
+        // Indices 3, 4, 5, 6, 7, 8, 9 → transformed: 10, 13, 16, 19, 22, 25, 28
+        #expect(results == [10, 13, 16, 19, 22, 25, 28])
+    }
+
+    @Test("INVARIANT: prefix.first preserves transform")
+    func prefixPreservesTransform() {
+        let range = Range.Lazy(0..<10) { $0 * 3 + 1 }
+        let prefixed = range.prefix.first(4)
+
+        var results: [Int] = []
+        var p = prefixed
+        p.forEach { results.append($0) }
+
+        // Indices 0, 1, 2, 3 → transformed: 1, 4, 7, 10
+        #expect(results == [1, 4, 7, 10])
+    }
+
+    @Test("INVARIANT: drop(0) and prefix(count) are identity operations")
+    func identityOperations() {
+        for size in [0, 1, 5, 20] {
+            let range = Range.Lazy(0..<size) { $0 }
+
+            // drop.first(0) should be identity
+            let afterDrop0 = range.drop.first(0)
+            #expect(afterDrop0.count == range.count)
+
+            // prefix.first(size) should be identity
+            let afterPrefixAll = range.prefix.first(size)
+            #expect(afterPrefixAll.count == range.count)
+
+            // prefix.first(size + 100) should also be identity
+            let afterPrefixMore = range.prefix.first(size + 100)
+            #expect(afterPrefixMore.count == range.count)
+        }
+    }
+
+    @Test("INVARIANT: order of operations matters")
+    func orderMatters() {
+        let range = Range.Lazy(0..<10) { $0 }
+
+        // drop(3).prefix(4) vs prefix(4).drop(3) should differ
+        let dropThenPrefix = range.drop.first(3).prefix.first(4)
+        let prefixThenDrop = range.prefix.first(4).drop.first(3)
+
+        var dtp: [Int] = []
+        var dtpRange = dropThenPrefix
+        dtpRange.forEach { dtp.append($0) }
+
+        var ptd: [Int] = []
+        var ptdRange = prefixThenDrop
+        ptdRange.forEach { ptd.append($0) }
+
+        // drop(3).prefix(4): [3, 4, 5, 6]
+        // prefix(4).drop(3): [3]
+        #expect(dtp == [3, 4, 5, 6])
+        #expect(ptd == [3])
+    }
+}
