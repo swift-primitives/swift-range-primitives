@@ -18,6 +18,11 @@ extension Range {
     /// function to produce typed bounds. This enables range-based iteration over
     /// `~Copyable` types without requiring `Sequence` conformance.
     ///
+    /// ## Regeneration Semantics
+    ///
+    /// Each iteration step or subscript access calls the transform function.
+    /// Values are **not cached** — they are created fresh at each access.
+    ///
     /// ## Why Not Sequence?
     ///
     /// `Range.Lazy` does not conform to `Sequence.Protocol` because:
@@ -25,6 +30,19 @@ extension Range {
     /// - `Range.Lazy<Bound>` is designed for `Bound: ~Copyable`
     ///
     /// Instead, use the closure-based `.forEach` and `.drain` patterns.
+    ///
+    /// ## Why Property.View (Not Direct Methods)
+    ///
+    /// The `.forEach` and `.drain` patterns use `Property.View` because it is
+    /// **mandatory**, not stylistic. Property.View enables consuming iteration
+    /// while preserving borrow checking and lifetime guarantees. Direct mutating
+    /// methods would require `var` binding at call sites and lose lifetime safety.
+    ///
+    /// ## Affine Type Integration
+    ///
+    /// When `Bound` is `Index<Tag>`, subscript access uses `Index<Tag>.Offset`
+    /// for type-safe offsets, integrating with swift-affine-primitives and
+    /// swift-index-primitives.
     ///
     /// ## Iteration Patterns
     ///
@@ -178,6 +196,69 @@ extension Range {
             @inlinable
             public var isEmpty: Bool { start >= end }
 
+            // MARK: - Terminal Operations
+
+            /// Returns the first element satisfying the predicate, if any.
+            ///
+            /// - Parameter predicate: A closure that takes a borrowed element and returns
+            ///   `true` if the element satisfies the condition.
+            /// - Returns: The first matching element, or `nil` if none match.
+            @inlinable
+            public consuming func first(
+                where predicate: (borrowing Bound) -> Bool
+            ) -> Bound? {
+                var i = end - 1
+                while i >= start {
+                    let bound = transform(i)
+                    if predicate(bound) {
+                        return bound
+                    }
+                    i -= 1
+                }
+                return nil
+            }
+
+            /// Returns `true` if all elements satisfy the predicate.
+            ///
+            /// - Parameter predicate: A closure that takes a borrowed element and returns
+            ///   `true` if the element satisfies the condition.
+            /// - Returns: `true` if all elements satisfy the predicate, or if the range is empty.
+            @inlinable
+            public consuming func allSatisfy(
+                _ predicate: (borrowing Bound) -> Bool
+            ) -> Bool {
+                var i = end - 1
+                while i >= start {
+                    let bound = transform(i)
+                    if !predicate(bound) {
+                        return false
+                    }
+                    i -= 1
+                }
+                return true
+            }
+
+            /// Returns the count of elements satisfying the predicate.
+            ///
+            /// - Parameter predicate: A closure that takes a borrowed element and returns
+            ///   `true` if the element should be counted.
+            /// - Returns: The number of elements satisfying the predicate.
+            @inlinable
+            public consuming func count(
+                where predicate: (borrowing Bound) -> Bool
+            ) -> Int {
+                var result = 0
+                var i = end - 1
+                while i >= start {
+                    let bound = transform(i)
+                    if predicate(bound) {
+                        result += 1
+                    }
+                    i -= 1
+                }
+                return result
+            }
+
             /// Returns an iterator over the range elements in reverse order.
             ///
             /// The range is consumed by this operation.
@@ -269,6 +350,63 @@ extension Range {
         /// A Boolean value indicating whether the range is empty.
         @inlinable
         public var isEmpty: Bool { start >= end }
+
+        // MARK: - Terminal Operations
+
+        /// Returns the first element satisfying the predicate, if any.
+        ///
+        /// - Parameter predicate: A closure that takes a borrowed element and returns
+        ///   `true` if the element satisfies the condition.
+        /// - Returns: The first matching element, or `nil` if none match.
+        @inlinable
+        public consuming func first(
+            where predicate: (borrowing Bound) -> Bool
+        ) -> Bound? {
+            for i in start..<end {
+                let bound = transform(i)
+                if predicate(bound) {
+                    return bound
+                }
+            }
+            return nil
+        }
+
+        /// Returns `true` if all elements satisfy the predicate.
+        ///
+        /// - Parameter predicate: A closure that takes a borrowed element and returns
+        ///   `true` if the element satisfies the condition.
+        /// - Returns: `true` if all elements satisfy the predicate, or if the range is empty.
+        @inlinable
+        public consuming func allSatisfy(
+            _ predicate: (borrowing Bound) -> Bool
+        ) -> Bool {
+            for i in start..<end {
+                let bound = transform(i)
+                if !predicate(bound) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        /// Returns the count of elements satisfying the predicate.
+        ///
+        /// - Parameter predicate: A closure that takes a borrowed element and returns
+        ///   `true` if the element should be counted.
+        /// - Returns: The number of elements satisfying the predicate.
+        @inlinable
+        public consuming func count(
+            where predicate: (borrowing Bound) -> Bool
+        ) -> Int {
+            var result = 0
+            for i in start..<end {
+                let bound = transform(i)
+                if predicate(bound) {
+                    result += 1
+                }
+            }
+            return result
+        }
 
         // MARK: - Iterator Factory
 
