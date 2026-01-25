@@ -11,6 +11,30 @@
 
 public import Index_Primitives
 
+// MARK: - Initializer from Swift.Range<Index>
+
+extension Range.Lazy {
+    /// Creates a lazy range from a `Swift.Range` of typed indices.
+    ///
+    /// This initializer enables iteration over `Swift.Range<Index<Tag>>` using
+    /// the `Range.Lazy` iteration patterns:
+    ///
+    /// ```swift
+    /// let range: Swift.Range<Index<Element>> = startIndex..<endIndex
+    /// Range.Lazy(range).forEach { index in
+    ///     process(elements[index])
+    /// }
+    /// ```
+    ///
+    /// - Parameter range: A Swift range of typed indices.
+    @inlinable
+    public init<Tag: ~Copyable>(_ range: Swift.Range<Index<Tag>>) where Bound == Index<Tag> {
+        self.init(
+            range.lowerBound.position.rawValue..<range.upperBound.position.rawValue
+        ) { Index<Tag>(__unchecked: (), position: $0) }
+    }
+}
+
 // MARK: - Typed Subscript for Index Bounds
 
 extension Range.Lazy {
