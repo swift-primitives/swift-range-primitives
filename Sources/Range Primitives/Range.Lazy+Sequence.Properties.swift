@@ -42,17 +42,25 @@ extension Range.Lazy where Bound: Copyable {
         }
     }
 
-    /// Access to `.count` operations.
+    /// Returns the count of elements satisfying the predicate.
     ///
     /// ```swift
-    /// range.count.where { $0 % 2 == 0 }  // Count of even elements
-    /// range.count.all                     // Total count
+    /// range.count(where: { $0 % 2 == 0 })  // Count of even elements
     /// ```
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns
+    ///   `true` if the element should be counted.
+    /// - Returns: The number of elements satisfying the predicate.
+    ///
+    /// - Note: For total count, use the `count` property which is O(1).
     @inlinable
-    public var countWhere: Property<Sequence.Count, Self>.View {
-        mutating _read {
-            yield unsafe Property<Sequence.Count, Self>.View(&self)
+    public func count(where predicate: (Bound) -> Bool) -> Int {
+        var result = 0
+        var iterator = makeIterator()
+        while let element = iterator.next() {
+            if predicate(element) { result += 1 }
         }
+        return result
     }
 
     /// Access to `.reduce` operations.
@@ -111,17 +119,25 @@ extension Range.Lazy.Reversed where Bound: Copyable {
         }
     }
 
-    /// Access to `.count` operations.
+    /// Returns the count of elements satisfying the predicate.
     ///
     /// ```swift
-    /// range.reversed().count.where { $0 % 2 == 0 }  // Count of even elements
-    /// range.reversed().count.all                     // Total count
+    /// range.reversed().count(where: { $0 % 2 == 0 })  // Count of even elements
     /// ```
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns
+    ///   `true` if the element should be counted.
+    /// - Returns: The number of elements satisfying the predicate.
+    ///
+    /// - Note: For total count, use the `count` property which is O(1).
     @inlinable
-    public var countWhere: Property<Sequence.Count, Self>.View {
-        mutating _read {
-            yield unsafe Property<Sequence.Count, Self>.View(&self)
+    public func count(where predicate: (Bound) -> Bool) -> Int {
+        var result = 0
+        var iterator = makeIterator()
+        while let element = iterator.next() {
+            if predicate(element) { result += 1 }
         }
+        return result
     }
 
     /// Access to `.reduce` operations.
