@@ -31,6 +31,12 @@ let package = Package(
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
+        .testTarget(
+            name: "Range Primitives Tests",
+            dependencies: [
+                "Range Primitives",
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
