@@ -23,13 +23,19 @@ extension Range {
     /// Each iteration step or subscript access calls the transform function.
     /// Values are **not cached** — they are created fresh at each access.
     ///
-    /// ## Why Not Sequence?
+    /// ## Conditional Sequence.Protocol Conformance
     ///
-    /// `Range.Lazy` does not conform to `Sequence.Protocol` because:
-    /// - `Sequence.Protocol.Element` implicitly requires `Copyable` (per SE-0427)
-    /// - `Range.Lazy<Bound>` is designed for `Bound: ~Copyable`
+    /// `Range.Lazy` conditionally conforms to `Sequence.Protocol` when `Bound: Copyable`:
     ///
-    /// Instead, use the closure-based `.forEach` and `.drain` patterns.
+    /// | Bound | Sequence.Protocol | Available Operations |
+    /// |-------|-------------------|---------------------|
+    /// | `Copyable` | Conforms | `.satisfies.all`, `.first`, `.countWhere`, `.reduce`, `.contains` |
+    /// | `~Copyable` | Does not conform | `.forEach`, `.drain` only |
+    ///
+    /// This conditional conformance exists because `Sequence.Protocol.Element`
+    /// implicitly requires `Copyable` per SE-0427.
+    ///
+    /// For `~Copyable` bounds, use the closure-based `.forEach` and `.drain` patterns.
     ///
     /// ## Why Property.View (Not Direct Methods)
     ///
@@ -196,69 +202,6 @@ extension Range {
             @inlinable
             public var isEmpty: Bool { start >= end }
 
-            // MARK: - Terminal Operations
-
-            /// Returns the first element satisfying the predicate, if any.
-            ///
-            /// - Parameter predicate: A closure that takes a borrowed element and returns
-            ///   `true` if the element satisfies the condition.
-            /// - Returns: The first matching element, or `nil` if none match.
-            @inlinable
-            public consuming func first(
-                where predicate: (borrowing Bound) -> Bool
-            ) -> Bound? {
-                var i = end - 1
-                while i >= start {
-                    let bound = transform(i)
-                    if predicate(bound) {
-                        return bound
-                    }
-                    i -= 1
-                }
-                return nil
-            }
-
-            /// Returns `true` if all elements satisfy the predicate.
-            ///
-            /// - Parameter predicate: A closure that takes a borrowed element and returns
-            ///   `true` if the element satisfies the condition.
-            /// - Returns: `true` if all elements satisfy the predicate, or if the range is empty.
-            @inlinable
-            public consuming func allSatisfy(
-                _ predicate: (borrowing Bound) -> Bool
-            ) -> Bool {
-                var i = end - 1
-                while i >= start {
-                    let bound = transform(i)
-                    if !predicate(bound) {
-                        return false
-                    }
-                    i -= 1
-                }
-                return true
-            }
-
-            /// Returns the count of elements satisfying the predicate.
-            ///
-            /// - Parameter predicate: A closure that takes a borrowed element and returns
-            ///   `true` if the element should be counted.
-            /// - Returns: The number of elements satisfying the predicate.
-            @inlinable
-            public consuming func count(
-                where predicate: (borrowing Bound) -> Bool
-            ) -> Int {
-                var result = 0
-                var i = end - 1
-                while i >= start {
-                    let bound = transform(i)
-                    if predicate(bound) {
-                        result += 1
-                    }
-                    i -= 1
-                }
-                return result
-            }
-
             /// Returns an iterator over the range elements in reverse order.
             ///
             /// The range is consumed by this operation.
@@ -351,63 +294,6 @@ extension Range {
         @inlinable
         public var isEmpty: Bool { start >= end }
 
-        // MARK: - Terminal Operations
-
-        /// Returns the first element satisfying the predicate, if any.
-        ///
-        /// - Parameter predicate: A closure that takes a borrowed element and returns
-        ///   `true` if the element satisfies the condition.
-        /// - Returns: The first matching element, or `nil` if none match.
-        @inlinable
-        public consuming func first(
-            where predicate: (borrowing Bound) -> Bool
-        ) -> Bound? {
-            for i in start..<end {
-                let bound = transform(i)
-                if predicate(bound) {
-                    return bound
-                }
-            }
-            return nil
-        }
-
-        /// Returns `true` if all elements satisfy the predicate.
-        ///
-        /// - Parameter predicate: A closure that takes a borrowed element and returns
-        ///   `true` if the element satisfies the condition.
-        /// - Returns: `true` if all elements satisfy the predicate, or if the range is empty.
-        @inlinable
-        public consuming func allSatisfy(
-            _ predicate: (borrowing Bound) -> Bool
-        ) -> Bool {
-            for i in start..<end {
-                let bound = transform(i)
-                if !predicate(bound) {
-                    return false
-                }
-            }
-            return true
-        }
-
-        /// Returns the count of elements satisfying the predicate.
-        ///
-        /// - Parameter predicate: A closure that takes a borrowed element and returns
-        ///   `true` if the element should be counted.
-        /// - Returns: The number of elements satisfying the predicate.
-        @inlinable
-        public consuming func count(
-            where predicate: (borrowing Bound) -> Bool
-        ) -> Int {
-            var result = 0
-            for i in start..<end {
-                let bound = transform(i)
-                if predicate(bound) {
-                    result += 1
-                }
-            }
-            return result
-        }
-
         // MARK: - Iterator Factory
 
         /// Returns an iterator over the range elements.
@@ -498,3 +384,12 @@ extension Range.Lazy: Sendable where Bound: Sendable {}
 extension Range.Lazy.Iterator: Sendable where Bound: Sendable {}
 extension Range.Lazy.Reversed: Sendable where Bound: Sendable {}
 extension Range.Lazy.Reversed.Iterator: Sendable where Bound: Sendable {}
+
+// MARK: - Conditional Copyable
+
+// The iterators are declared as ~Copyable to support ~Copyable bounds, but their
+// stored properties (Int, function type) are always Copyable. When Bound: Copyable,
+// the iterators can safely conform to Copyable, enabling IteratorProtocol conformance.
+
+extension Range.Lazy.Iterator: Copyable where Bound: Copyable {}
+extension Range.Lazy.Reversed.Iterator: Copyable where Bound: Copyable {}
