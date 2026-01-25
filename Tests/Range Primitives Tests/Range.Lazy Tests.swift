@@ -12,7 +12,6 @@
 import Testing
 
 @testable import Range_Primitives
-import Sequence_Primitives
 
 // MARK: - Test Structure
 
