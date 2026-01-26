@@ -32,14 +32,16 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// Returns a new lazy range with adjusted end bound.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }
-    /// range.prefix.first(3)  // Range.Lazy(0..<3)
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }
+    /// range.prefix.first(try! .init(3))  // Range.Lazy(0..<3)
     /// ```
     @inlinable
-    public consuming func first(_ count: Index.Count) -> Range.Lazy<Bound> {
-        let newEnd = min(base.start + count, base.end)
-        return Range.Lazy<Bound>(start: base.start, end: newEnd, transform: base.transform)
+    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
+        // Total: Index position + Count is always non-negative
+        let advancedPosition = base.start.position.rawValue + count.rawValue
+        let newEnd = Range.Index(__unchecked: (), min(advancedPosition, base.end.position.rawValue))
+        return Range.Lazy<Bound>(__unchecked: (), start: base.start, end: newEnd, transform: base.transform)
     }
 
     /// Take elements while predicate is true: `.prefix.while { }` → O(n)
@@ -48,16 +50,19 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// Returns array (cannot compute new bounds without iteration).
     ///
     /// ```swift
-    /// var range = Range.Lazy(0..<10) { $0 }
-    /// range.prefix.while { $0 < 5 }  // [0, 1, 2, 3, 4]
+    /// let range = Range.Lazy(count: try! .init(10)) { $0 }
+    /// range.prefix.while { $0.position.rawValue < 5 }  // [0, 1, 2, 3, 4]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
         var result: [Bound] = []
-        for i in base.start..<base.end {
+        var i = base.start
+        while i < base.end {
             let element = base.transform(i)
             if !predicate(element) { break }
             result.append(element)
+            // Proof: i < end, so i + 1 <= end
+            i = Range.Index(__unchecked: (), i.position.rawValue + 1)
         }
         return result
     }
@@ -68,9 +73,9 @@ extension Range.Lazy where Bound: Copyable {
     /// Access to `.prefix` operations with O(1) `first(_:)`.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }
-    /// let prefixed = range.prefix.first(3)  // O(1) → Range.Lazy(0..<3)
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }
+    /// let prefixed = range.prefix.first(try! .init(3))  // O(1) → Range.Lazy(0..<3)
     /// ```
     @inlinable
     public var `prefix`: Prefix {

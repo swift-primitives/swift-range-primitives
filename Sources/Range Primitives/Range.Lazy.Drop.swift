@@ -32,14 +32,16 @@ extension Range.Lazy.Drop where Bound: Copyable {
     /// Returns a new lazy range with adjusted start bound.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }
-    /// range.drop.first(3)  // Range.Lazy(3..<10)
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }
+    /// range.drop.first(try! .init(3))  // Range.Lazy(3..<10)
     /// ```
     @inlinable
-    public consuming func first(_ count: Index.Count) -> Range.Lazy<Bound> {
-        let newStart = min(base.start + count, base.end)
-        return Range.Lazy<Bound>(start: newStart, end: base.end, transform: base.transform)
+    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
+        // Total: Index position + Count is always non-negative
+        let advancedPosition = base.start.position.rawValue + count.rawValue
+        let newStart = Range.Index(__unchecked: (), min(advancedPosition, base.end.position.rawValue))
+        return Range.Lazy<Bound>(__unchecked: (), start: newStart, end: base.end, transform: base.transform)
     }
 
     /// Skip elements while predicate is true: `.drop.while { }` → O(n)
@@ -48,20 +50,25 @@ extension Range.Lazy.Drop where Bound: Copyable {
     /// Returns array (cannot compute new bounds without iteration).
     ///
     /// ```swift
-    /// var range = Range.Lazy(0..<10) { $0 }
-    /// range.drop.while { $0 < 5 }  // [5, 6, 7, 8, 9]
+    /// let range = Range.Lazy(count: try! .init(10)) { $0 }
+    /// range.drop.while { $0.position.rawValue < 5 }  // [5, 6, 7, 8, 9]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
         var result: [Bound] = []
         var dropping = true
-        for i in base.start..<base.end {
+        var i = base.start
+        while i < base.end {
             let element = base.transform(i)
             if dropping && predicate(element) {
+                // Proof: i < end, so i + 1 <= end
+                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
                 continue
             }
             dropping = false
             result.append(element)
+            // Proof: i < end, so i + 1 <= end
+            i = Range.Index(__unchecked: (), i.position.rawValue + 1)
         }
         return result
     }
@@ -72,9 +79,9 @@ extension Range.Lazy where Bound: Copyable {
     /// Access to `.drop` operations with O(1) `first(_:)`.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }
-    /// let dropped = range.drop.first(3)  // O(1) → Range.Lazy(3..<10)
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }
+    /// let dropped = range.drop.first(try! .init(3))  // O(1) → Range.Lazy(3..<10)
     /// ```
     @inlinable
     public var drop: Drop {

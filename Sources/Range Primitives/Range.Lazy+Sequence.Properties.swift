@@ -54,13 +54,13 @@ extension Range.Lazy where Bound: Copyable {
     ///
     /// - Note: For total count, use the `count` property which is O(1).
     @inlinable
-    public func count(where predicate: (Bound) -> Bool) -> Index.Count {
-        var result: Index.Count = .zero
+    public func count(where predicate: (Bound) -> Bool) -> Range.Index.Count {
+        var count = 0
         var iterator = makeIterator()
         while let element = iterator.next() {
-            if predicate(element) { result += .one }
+            if predicate(element) { count += 1 }
         }
-        return result
+        return Range.Index.Count(__unchecked: (), count)
     }
 
     /// Access to `.reduce` operations.
@@ -131,13 +131,13 @@ extension Range.Lazy.Reversed where Bound: Copyable {
     ///
     /// - Note: For total count, use the `count` property which is O(1).
     @inlinable
-    public func count(where predicate: (Bound) -> Bool) -> Index.Count {
-        var result: Index.Count = .zero
+    public func count(where predicate: (Bound) -> Bool) -> Range.Index.Count {
+        var count = 0
         var iterator = makeIterator()
         while let element = iterator.next() {
-            if predicate(element) { result += .one }
+            if predicate(element) { count += 1 }
         }
-        return result
+        return Range.Index.Count(__unchecked: (), count)
     }
 
     /// Access to `.reduce` operations.

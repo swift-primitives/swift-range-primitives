@@ -32,41 +32,51 @@ extension Range.Lazy.Reversed.Drop where Bound: Copyable {
     /// For a reversed range, this drops from the high end.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }.reversed()
-    /// range.drop.first(3)  // Equivalent to 0..<7 reversed
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }.reversed()
+    /// range.drop.first(try! .init(3))  // Equivalent to 0..<7 reversed
     /// ```
     @inlinable
-    public consuming func first(_ count: Index.Count) -> Range.Lazy<Bound>.Reversed {
-        let newEnd = max(base.end - count, base.start)
-        return Range.Lazy<Bound>.Reversed(
-            start: base.start,
-            end: newEnd,
-            transform: base.transform
-        )
+    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
+        // Clamped subtraction: retreat end by count, but not below start
+        let newEnd: Range.Index
+        if count.rawValue <= (base.end - base.start).rawValue {
+            // Proof: count <= (end - start), so end - count >= start >= 0
+            newEnd = Range.Index(__unchecked: (), base.end.position.rawValue - count.rawValue)
+        } else {
+            newEnd = base.start
+        }
+        return Range.Lazy<Bound>.Reversed(__unchecked: (), start: base.start, end: newEnd, transform: base.transform)
     }
 
     /// Skip elements while predicate is true: `.drop.while { }` → O(n)
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }.reversed()
-    /// range.drop.while { $0 > 5 }  // [5, 4, 3, 2, 1, 0]
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }.reversed()
+    /// range.drop.while { $0.position.rawValue > 5 }  // [5, 4, 3, 2, 1, 0]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
         var result: [Bound] = []
         var dropping = true
-        var i = base.end - .one
+        guard !base.isEmpty else { return result }
+
+        // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
+        var i = Range.Index(__unchecked: (), base.end.position.rawValue - 1)
         while i >= base.start {
             let element = base.transform(i)
             if dropping && predicate(element) {
-                i -= .one
+                if i == base.start { break }
+                // Proof: i > start >= 0, so i - 1 >= 0
+                i = Range.Index(__unchecked: (), i.position.rawValue - 1)
                 continue
             }
             dropping = false
             result.append(element)
-            i -= .one
+            if i == base.start { break }
+            // Proof: i > start >= 0, so i - 1 >= 0
+            i = Range.Index(__unchecked: (), i.position.rawValue - 1)
         }
         return result
     }
@@ -77,8 +87,8 @@ extension Range.Lazy.Reversed where Bound: Copyable {
     /// Access to `.drop` operations.
     ///
     /// ```swift
-    /// let range = Range.Lazy(0..<10) { $0 }.reversed()
-    /// let dropped = range.drop.first(3)  // O(1)
+    /// let range = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
+    /// let dropped = range.drop.first(try! .init(3))  // O(1)
     /// ```
     @inlinable
     public var drop: Drop {

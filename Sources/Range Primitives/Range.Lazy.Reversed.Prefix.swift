@@ -32,36 +32,45 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// For a reversed range, this takes from the high end.
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }.reversed()
-    /// range.prefix.first(3)  // Equivalent to 7..<10 reversed → [9, 8, 7]
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }.reversed()
+    /// range.prefix.first(try! .init(3))  // Equivalent to 7..<10 reversed → [9, 8, 7]
     /// ```
     @inlinable
-    public consuming func first(_ count: Index.Count) -> Range.Lazy<Bound>.Reversed {
-        let newStart = max(base.end - count, base.start)
-        return Range.Lazy<Bound>.Reversed(
-            start: newStart,
-            end: base.end,
-            transform: base.transform
-        )
+    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
+        // Clamped subtraction: retreat end by (size - count) to get new start, but not below original start
+        let newStart: Range.Index
+        if count.rawValue <= (base.end - base.start).rawValue {
+            // Proof: count <= (end - start), so end - count >= start >= 0
+            newStart = Range.Index(__unchecked: (), base.end.position.rawValue - count.rawValue)
+        } else {
+            newStart = base.start
+        }
+        let clamped = max(newStart, base.start)
+        return Range.Lazy<Bound>.Reversed(__unchecked: (), start: clamped, end: base.end, transform: base.transform)
     }
 
     /// Take elements while predicate is true: `.prefix.while { }` → O(n)
     ///
     /// ```swift
-    /// let count: Index.Count = 10
-    /// let range = Range.Lazy(.zero..<count) { $0 }.reversed()
-    /// range.prefix.while { $0 > 5 }  // [9, 8, 7, 6]
+    /// let count = try! Range.Index.Count(10)
+    /// let range = Range.Lazy(count: count) { $0 }.reversed()
+    /// range.prefix.while { $0.position.rawValue > 5 }  // [9, 8, 7, 6]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
         var result: [Bound] = []
-        var i = base.end - .one
+        guard !base.isEmpty else { return result }
+
+        // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
+        var i = Range.Index(__unchecked: (), base.end.position.rawValue - 1)
         while i >= base.start {
             let element = base.transform(i)
             if !predicate(element) { break }
             result.append(element)
-            i -= .one
+            if i == base.start { break }
+            // Proof: i > start >= 0, so i - 1 >= 0
+            i = Range.Index(__unchecked: (), i.position.rawValue - 1)
         }
         return result
     }
@@ -72,8 +81,8 @@ extension Range.Lazy.Reversed where Bound: Copyable {
     /// Access to `.prefix` operations.
     ///
     /// ```swift
-    /// let range = Range.Lazy(0..<10) { $0 }.reversed()
-    /// let prefixed = range.prefix.first(3)  // O(1)
+    /// let range = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
+    /// let prefixed = range.prefix.first(try! .init(3))  // O(1)
     /// ```
     @inlinable
     public var `prefix`: Prefix {

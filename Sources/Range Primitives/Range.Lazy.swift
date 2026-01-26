@@ -13,9 +13,13 @@ public import Property_Primitives
 public import Index_Primitives
 
 extension Range {
-    
-    public typealias Index = Index_Primitives.Index<Int>
-    
+
+    /// The index type for range bounds.
+    ///
+    /// Uses `Index<Range>` to provide a range-local index domain, ensuring
+    /// type safety through phantom typing.
+    public typealias Index = Index_Primitives.Index<Range>
+
     /// A lazy range that produces `~Copyable` bounds on-demand.
     ///
     /// `Range.Lazy` stores integer bounds internally and applies a transformation
@@ -57,7 +61,9 @@ extension Range {
     /// ## Iteration Patterns
     ///
     /// ```swift
-    /// var range = Range.Lazy(0..<count) { Index(__unchecked: (), position: $0) }
+    /// var range = Range.Lazy(count: try! .init(10)) { position in
+    ///     Index<Node>(__unchecked: (), position.position.rawValue)
+    /// }
     ///
     /// // Borrowing iteration (range survives)
     /// range.forEach { index in
@@ -88,10 +94,13 @@ extension Range {
     /// so that they properly inherit the `~Copyable` constraint from `Bound`. This
     /// matches the pattern used by `Array.Static` and `Array.Storage`.
     public struct Lazy<Bound: ~Copyable> {
-        
+
         public var start: Range.Index
 
         public var end: Range.Index
+
+        @usableFromInline
+        let _count: Range.Index.Count
 
         @usableFromInline
         let transform: @Sendable (Range.Index) -> Bound
@@ -123,8 +132,10 @@ extension Range {
             @inlinable
             public mutating func next() -> Bound? {
                 guard current < end else { return nil }
-                defer { current += .one }
-                return transform(current)
+                let result = transform(current)
+                // Proof: current < end, so current + 1 <= end <= Int.max
+                current = Range.Index(__unchecked: (), current.position.rawValue + 1)
+                return result
             }
         }
 
@@ -138,7 +149,9 @@ extension Range {
         /// ## Usage
         ///
         /// ```swift
-        /// var range = Range.Lazy(0..<5) { Index(__unchecked: (), position: $0) }
+        /// var range = Range.Lazy(count: try! .init(5)) { position in
+        ///     Index<Node>(__unchecked: (), position.position.rawValue)
+        /// }
         /// var reversed = range.reversed()
         /// reversed.forEach { print($0) }
         /// // Prints indices for positions: 4, 3, 2, 1, 0
@@ -161,9 +174,15 @@ extension Range {
             var end: Range.Index
 
             @usableFromInline
+            let _count: Range.Index.Count
+
+            @usableFromInline
             let transform: @Sendable (Range.Index) -> Bound
 
             /// Iterator for `Range.Lazy.Reversed`.
+            ///
+            /// Uses a check-before-decrement pattern with an `exhausted` flag
+            /// to avoid underflow when reaching index zero.
             public struct Iterator: ~Copyable {
                 @usableFromInline
                 var current: Range.Index
@@ -174,63 +193,101 @@ extension Range {
                 @usableFromInline
                 let transform: @Sendable (Range.Index) -> Bound
 
+                @usableFromInline
+                var exhausted: Bool
+
                 @inlinable
                 init(current: Range.Index, start: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                     self.current = current
                     self.start = start
                     self.transform = transform
+                    self.exhausted = false
                 }
 
                 /// Advances to the next element and returns it, or `nil` if exhausted.
                 @inlinable
                 public mutating func next() -> Bound? {
+                    guard !exhausted else { return nil }
                     guard current >= start else { return nil }
-                    defer { current -= .one }
-                    return transform(current)
+
+                    let result = transform(current)
+
+                    if current == start {
+                        exhausted = true
+                    } else {
+                        // Proof: current > start >= 0, so current - 1 >= 0
+                        current = Range.Index(__unchecked: (), current.position.rawValue - 1)
+                    }
+
+                    return result
                 }
             }
 
             @usableFromInline
-            init(start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
+            init(start: Range.Index, end: Range.Index, count: Range.Index.Count, transform: @escaping @Sendable (Range.Index) -> Bound) {
                 self.start = start
                 self.end = end
+                self._count = count
+                self.transform = transform
+            }
+
+            /// Internal unchecked initializer for operations that have already validated bounds.
+            @usableFromInline
+            init(__unchecked: Void, start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
+                self.start = start
+                self.end = end
+                // Safe: caller guarantees end >= start
+                self._count = Range.Index.Count(__unchecked: (), end - start)
                 self.transform = transform
             }
 
             /// The number of elements in the range.
             @inlinable
-            public var count: Index.Count { end - start }
+            public var count: Range.Index.Count { _count }
 
             /// A Boolean value indicating whether the range is empty.
             @inlinable
-            public var isEmpty: Bool { start >= end }
+            public var isEmpty: Bool { _count == .zero }
 
             /// Returns an iterator over the range elements in reverse order.
             ///
             /// The range is consumed by this operation.
             @inlinable
             public consuming func makeIterator() -> Iterator {
-                Iterator(current: end - .one, start: start, transform: transform)
+                guard !isEmpty else {
+                    return Iterator(current: start, start: start, transform: transform)
+                }
+                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
+                let lastIndex = Range.Index(__unchecked: (), end.position.rawValue - 1)
+                return Iterator(current: lastIndex, start: start, transform: transform)
             }
 
             // MARK: - Internal Iteration
 
             @inlinable
             mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
-                var i = end - .one
+                guard !isEmpty else { return }
+                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
+                var i = Range.Index(__unchecked: (), end.position.rawValue - 1)
                 while i >= start {
                     let bound = transform(i)
                     body(bound)
-                    i -= .one
+                    if i == start { break }
+                    // Proof: i > start >= 0, so i - 1 >= 0
+                    i = Range.Index(__unchecked: (), i.position.rawValue - 1)
                 }
             }
 
             @inlinable
             mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
-                var i = end - .one
+                guard !isEmpty else { return }
+                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
+                var i = Range.Index(__unchecked: (), end.position.rawValue - 1)
                 while i >= start {
                     body(transform(i))
-                    i -= .one
+                    if i == start { break }
+                    // Proof: i > start >= 0, so i - 1 >= 0
+                    i = Range.Index(__unchecked: (), i.position.rawValue - 1)
                 }
                 // Mark as empty
                 start = end
@@ -257,7 +314,7 @@ extension Range {
             /// Requires a mutable binding because drain empties the range.
             ///
             /// ```swift
-            /// var reversed = Range.Lazy(0..<10) { $0 }.reversed()
+            /// var reversed = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
             /// reversed.drain { consume($0) }
             /// // reversed is now empty
             /// ```
@@ -275,25 +332,56 @@ extension Range {
 
         // MARK: - Initializers
 
-        /// Creates a lazy range with the given integer bounds and transformation.
+        /// Creates a lazy range from zero to count.
+        ///
+        /// This is the canonical constructor for zero-based ranges.
         ///
         /// - Parameters:
-        ///   - range: The integer range to iterate over.
-        ///   - transform: A function that converts an integer position to the bound type.
+        ///   - count: The number of elements in the range.
+        ///   - transform: A function that converts a range position to the bound type.
         @inlinable
-        public init(_ range: Swift.Range<Range.Index>, transform: @escaping @Sendable (Range.Index) -> Bound) {
-            self.start = range.lowerBound
-            self.end = range.upperBound
+        public init(
+            count: Range.Index.Count,
+            transform: @escaping @Sendable (Range.Index) -> Bound
+        ) {
+            self.start = .zero
+            self.end = Range.Index(count)
+            self._count = count
             self.transform = transform
         }
 
-        /// Internal initializer for direct bounds construction.
+        /// Creates a lazy range with explicit bounds.
+        ///
+        /// - Parameters:
+        ///   - start: The start index (inclusive).
+        ///   - end: The end index (exclusive).
+        ///   - transform: A function that converts a range position to the bound type.
+        /// - Throws: `Range.Error.invalidBounds` if start > end.
+        @inlinable
+        public init(
+            start: Range.Index,
+            end: Range.Index,
+            transform: @escaping @Sendable (Range.Index) -> Bound
+        ) throws(Range.Error) {
+            guard start <= end else {
+                throw .invalidBounds(start: start, end: end)
+            }
+            self.start = start
+            self.end = end
+            // Safe after validation: end >= start means offset is non-negative
+            self._count = Range.Index.Count(__unchecked: (), end - start)
+            self.transform = transform
+        }
+
+        /// Internal unchecked initializer for operations that have already validated bounds.
         ///
         /// Used by Drop/Prefix operations to construct adjusted ranges in O(1).
         @usableFromInline
-        init(start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
+        init(__unchecked: Void, start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
             self.start = start
             self.end = end
+            // Safe: caller guarantees end >= start
+            self._count = Range.Index.Count(__unchecked: (), end - start)
             self.transform = transform
         }
 
@@ -301,11 +389,11 @@ extension Range {
 
         /// The number of elements in the range.
         @inlinable
-        public var count: Index.Count { end - start }
+        public var count: Range.Index.Count { _count }
 
         /// A Boolean value indicating whether the range is empty.
         @inlinable
-        public var isEmpty: Bool { start >= end }
+        public var isEmpty: Bool { _count == .zero }
 
         // MARK: - Iterator Factory
 
@@ -324,30 +412,38 @@ extension Range {
         /// The reversed range iterates from `end-1` down to `start`.
         ///
         /// ```swift
-        /// var range = Range.Lazy(0..<5) { Index(__unchecked: (), position: $0) }
+        /// var range = Range.Lazy(count: try! .init(5)) { position in
+        ///     Index<Node>(__unchecked: (), position.position.rawValue)
+        /// }
         /// var reversed = range.reversed()
         /// reversed.forEach { print($0) }
         /// // Prints indices for positions: 4, 3, 2, 1, 0
         /// ```
         @inlinable
         public consuming func reversed() -> Reversed {
-            Reversed(start: start, end: end, transform: transform)
+            Reversed(start: start, end: end, count: _count, transform: transform)
         }
 
         // MARK: - Internal Iteration
 
         @inlinable
         mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
-            for i in start..<end {
+            var i = start
+            while i < end {
                 let bound = transform(i)
                 body(bound)
+                // Proof: i < end, so i + 1 <= end
+                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
             }
         }
 
         @inlinable
         mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
-            for i in start..<end {
+            var i = start
+            while i < end {
                 body(transform(i))
+                // Proof: i < end, so i + 1 <= end
+                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
             }
             // Mark as empty
             start = end
@@ -374,7 +470,7 @@ extension Range {
         /// Requires a mutable binding because drain empties the range.
         ///
         /// ```swift
-        /// var range = Range.Lazy(0..<10) { Index(__unchecked: (), position: $0) }
+        /// var range = Range.Lazy(count: try! .init(10)) { $0 }
         /// range.drain { consume($0) }
         /// // range is now empty
         /// ```
