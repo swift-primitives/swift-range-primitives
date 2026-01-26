@@ -61,7 +61,7 @@ extension Range {
     /// ## Iteration Patterns
     ///
     /// ```swift
-    /// var range = Range.Lazy(count: try! .init(10)) { position in
+    /// var range = Range.Lazy(count: try .init(10)) { position in
     ///     Index<Node>(__unchecked: (), position.position.rawValue)
     /// }
     ///
@@ -149,7 +149,7 @@ extension Range {
         /// ## Usage
         ///
         /// ```swift
-        /// var range = Range.Lazy(count: try! .init(5)) { position in
+        /// var range = Range.Lazy(count: try .init(5)) { position in
         ///     Index<Node>(__unchecked: (), position.position.rawValue)
         /// }
         /// var reversed = range.reversed()
@@ -322,7 +322,7 @@ extension Range {
             /// Requires a mutable binding because drain empties the range.
             ///
             /// ```swift
-            /// var reversed = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
+            /// var reversed = Range.Lazy(count: try .init(10)) { $0 }.reversed()
             /// reversed.drain { consume($0) }
             /// // reversed is now empty
             /// ```
@@ -385,7 +385,7 @@ extension Range {
         ///
         /// Used by Drop/Prefix operations to construct adjusted ranges in O(1).
         @usableFromInline
-        init(
+        package init(
             __unchecked: Void,
             start: Range.Index,
             end: Range.Index,
@@ -425,7 +425,7 @@ extension Range {
         /// The reversed range iterates from `end-1` down to `start`.
         ///
         /// ```swift
-        /// var range = Range.Lazy(count: try! .init(5)) { position in
+        /// var range = Range.Lazy(count: try .init(5)) { position in
         ///     Index<Node>(__unchecked: (), position.position.rawValue)
         /// }
         /// var reversed = range.reversed()
@@ -484,7 +484,7 @@ extension Range {
         /// Requires a mutable binding because drain empties the range.
         ///
         /// ```swift
-        /// var range = Range.Lazy(count: try! .init(10)) { $0 }
+        /// var range = Range.Lazy(count: try .init(10)) { $0 }
         /// range.drain { consume($0) }
         /// // range is now empty
         /// ```

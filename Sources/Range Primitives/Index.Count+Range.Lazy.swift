@@ -16,7 +16,7 @@ public import Index_Primitives
 /// This operator enables clean iteration patterns with phantom-typed indices:
 ///
 /// ```swift
-/// let count = try! Index<Element>.Count(10)
+/// let count = try Index<Element>.Count(10)
 ///
 /// // Iterate over indices 0..<10
 /// (.zero..<count).forEach { index in

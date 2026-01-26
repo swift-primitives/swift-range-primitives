@@ -469,11 +469,11 @@ extension RangeLazyInvariantTests.Consistency {
     }
 
     @Test
-    func `INVARIANT: count(where: { true }) == count property`() {
+    func `INVARIANT: count(where: { true }) == count property`() throws {
         for size in [0, 1, 5, 100] {
             let range = Range.Lazy(0..<size) { $0 }
             let countWhere = range.count(where: { _ in true })
-            let bool = try! countWhere == Range.Index.Count(size)
+            let bool = try countWhere == Range.Index.Count(size)
             #expect(bool,
                    "Size \(size): count(where: true) = \(countWhere)")
         }
@@ -1091,27 +1091,27 @@ enum RangeLazyDropPrefixInvariantTests {
 
 extension RangeLazyDropPrefixInvariantTests.Invariants {
 
-//    @Test
-//    func `INVARIANT: drop.first(n) + prefix.first(m) maintains correct total when m <= remaining`() {
-//        for size in [0, 1, 5, 20, 100] {
-//            for dropCount in try! [0, 1, size / 2, size, size + 5].map(Range.Index.Count.init) {
-//                let range = Range.Lazy(0..<size) { $0 }
-//                let afterDrop = range.drop.first(dropCount)
-//                let remaining: Range.Index.Count = max(0, size - dropCount)
-//
-//                #expect(afterDrop.count == remaining,
-//                       "Size \(size), drop \(dropCount): expected \(remaining), got \(afterDrop.count)")
-//
-//                for prefixCount in [0, 1, remaining / 2, remaining, remaining + 5] {
-//                    let afterPrefix = afterDrop.prefix.first(try! Range.Index.Count(prefixCount))
-//                    let expected = min(prefixCount, remaining)
-//
-//                    #expect(afterPrefix.count == expected,
-//                           "Size \(size), drop \(dropCount), prefix \(prefixCount): expected \(expected), got \(afterPrefix.count)")
-//                }
-//            }
-//        }
-//    }
+    @Test
+    func `INVARIANT: drop.first(n) + prefix.first(m) maintains correct total when m <= remaining`() throws {
+        for size in [0, 1, 5, 20, 100] {
+            for dropCount in try! [0, 1, size / 2, size, size + 5].map(Range.Index.Count.init) {
+                let range = Range.Lazy(0..<size) { $0 }
+                let afterDrop = range.drop.first(dropCount)
+                let remaining: Range.Index.Count = max(0, size - dropCount)
+
+                #expect(afterDrop.count == remaining,
+                       "Size \(size), drop \(dropCount): expected \(remaining), got \(afterDrop.count)")
+
+                for prefixCount in [0, 1, remaining / 2, remaining, remaining + 5] {
+                    let afterPrefix = afterDrop.prefix.first(try Range.Index.Count(prefixCount))
+                    let expected = min(prefixCount, remaining)
+
+                    #expect(afterPrefix.count == expected,
+                           "Size \(size), drop \(dropCount), prefix \(prefixCount): expected \(expected), got \(afterPrefix.count)")
+                }
+            }
+        }
+    }
 
     @Test
     func `INVARIANT: drop.first preserves transform`() {
@@ -1140,7 +1140,7 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
     }
 
     @Test
-    func `INVARIANT: drop(0) and prefix(count) are identity operations`() {
+    func `INVARIANT: drop(0) and prefix(count) are identity operations`() throws {
         for size in [0, 1, 5, 20] {
             let range = Range.Lazy(0..<size) { $0 }
 
@@ -1149,11 +1149,11 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
             #expect(afterDrop0.count == range.count)
 
             // prefix.first(size) should be identity
-            let afterPrefixAll = range.prefix.first(try! Range.Index.Count(size))
+            let afterPrefixAll = range.prefix.first(try Range.Index.Count(size))
             #expect(afterPrefixAll.count == range.count)
 
             // prefix.first(size + 100) should also be identity
-            let afterPrefixMore = range.prefix.first(try! Range.Index.Count(size + 100))
+            let afterPrefixMore = range.prefix.first(try Range.Index.Count(size + 100))
             #expect(afterPrefixMore.count == range.count)
         }
     }

@@ -9,8 +9,8 @@
 //
 // ===----------------------------------------------------------------------===//
 
-@testable public import Range_Primitives
-@_exported public import Index_Primitives_Test_Support
+public import Range_Primitives
+import Index_Primitives_Test_Support
 
 // MARK: - Range.Lazy Convenience Initializer
 

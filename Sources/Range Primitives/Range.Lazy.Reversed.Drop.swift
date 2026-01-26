@@ -32,9 +32,9 @@ extension Range.Lazy.Reversed.Drop where Bound: Copyable {
     /// For a reversed range, this drops from the high end.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }.reversed()
-    /// range.drop.first(try! .init(3))  // Equivalent to 0..<7 reversed
+    /// range.drop.first(try .init(3))  // Equivalent to 0..<7 reversed
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
@@ -52,7 +52,7 @@ extension Range.Lazy.Reversed.Drop where Bound: Copyable {
     /// Skip elements while predicate is true: `.drop.while { }` → O(n)
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }.reversed()
     /// range.drop.while { $0.position.rawValue > 5 }  // [5, 4, 3, 2, 1, 0]
     /// ```
@@ -87,8 +87,8 @@ extension Range.Lazy.Reversed where Bound: Copyable {
     /// Access to `.drop` operations.
     ///
     /// ```swift
-    /// let range = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
-    /// let dropped = range.drop.first(try! .init(3))  // O(1)
+    /// let range = Range.Lazy(count: try .init(10)) { $0 }.reversed()
+    /// let dropped = range.drop.first(try .init(3))  // O(1)
     /// ```
     @inlinable
     public var drop: Drop {

@@ -32,9 +32,9 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// Returns a new lazy range with adjusted end bound.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }
-    /// range.prefix.first(try! .init(3))  // Range.Lazy(0..<3)
+    /// range.prefix.first(try .init(3))  // Range.Lazy(0..<3)
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
@@ -50,7 +50,7 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// Returns array (cannot compute new bounds without iteration).
     ///
     /// ```swift
-    /// let range = Range.Lazy(count: try! .init(10)) { $0 }
+    /// let range = Range.Lazy(count: try .init(10)) { $0 }
     /// range.prefix.while { $0.position.rawValue < 5 }  // [0, 1, 2, 3, 4]
     /// ```
     @inlinable
@@ -73,9 +73,9 @@ extension Range.Lazy where Bound: Copyable {
     /// Access to `.prefix` operations with O(1) `first(_:)`.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }
-    /// let prefixed = range.prefix.first(try! .init(3))  // O(1) → Range.Lazy(0..<3)
+    /// let prefixed = range.prefix.first(try .init(3))  // O(1) → Range.Lazy(0..<3)
     /// ```
     @inlinable
     public var `prefix`: Prefix {

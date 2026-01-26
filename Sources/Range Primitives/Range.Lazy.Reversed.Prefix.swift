@@ -32,9 +32,9 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// For a reversed range, this takes from the high end.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }.reversed()
-    /// range.prefix.first(try! .init(3))  // Equivalent to 7..<10 reversed → [9, 8, 7]
+    /// range.prefix.first(try .init(3))  // Equivalent to 7..<10 reversed → [9, 8, 7]
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
@@ -53,7 +53,7 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// Take elements while predicate is true: `.prefix.while { }` → O(n)
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }.reversed()
     /// range.prefix.while { $0.position.rawValue > 5 }  // [9, 8, 7, 6]
     /// ```
@@ -81,8 +81,8 @@ extension Range.Lazy.Reversed where Bound: Copyable {
     /// Access to `.prefix` operations.
     ///
     /// ```swift
-    /// let range = Range.Lazy(count: try! .init(10)) { $0 }.reversed()
-    /// let prefixed = range.prefix.first(try! .init(3))  // O(1)
+    /// let range = Range.Lazy(count: try .init(10)) { $0 }.reversed()
+    /// let prefixed = range.prefix.first(try .init(3))  // O(1)
     /// ```
     @inlinable
     public var `prefix`: Prefix {

@@ -32,9 +32,9 @@ extension Range.Lazy.Drop where Bound: Copyable {
     /// Returns a new lazy range with adjusted start bound.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }
-    /// range.drop.first(try! .init(3))  // Range.Lazy(3..<10)
+    /// range.drop.first(try .init(3))  // Range.Lazy(3..<10)
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
@@ -50,7 +50,7 @@ extension Range.Lazy.Drop where Bound: Copyable {
     /// Returns array (cannot compute new bounds without iteration).
     ///
     /// ```swift
-    /// let range = Range.Lazy(count: try! .init(10)) { $0 }
+    /// let range = Range.Lazy(count: try .init(10)) { $0 }
     /// range.drop.while { $0.position.rawValue < 5 }  // [5, 6, 7, 8, 9]
     /// ```
     @inlinable
@@ -79,9 +79,9 @@ extension Range.Lazy where Bound: Copyable {
     /// Access to `.drop` operations with O(1) `first(_:)`.
     ///
     /// ```swift
-    /// let count = try! Range.Index.Count(10)
+    /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }
-    /// let dropped = range.drop.first(try! .init(3))  // O(1) → Range.Lazy(3..<10)
+    /// let dropped = range.drop.first(try .init(3))  // O(1) → Range.Lazy(3..<10)
     /// ```
     @inlinable
     public var drop: Drop {
