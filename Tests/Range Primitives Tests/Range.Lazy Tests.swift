@@ -10,10 +10,11 @@
 // ===----------------------------------------------------------------------===//
 
 import Testing
-
+import Range_Primitives_Test_Support
 @testable import Range_Primitives
 
 // MARK: - Test Structure
+
 
 enum RangeLazyTests {
     @Suite struct Unit {}
@@ -1094,14 +1095,14 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
         for size in [0, 1, 5, 20, 100] {
             for dropCount in [0, 1, size / 2, size, size + 5] {
                 let range = Range.Lazy(0..<size) { $0 }
-                let afterDrop = range.drop.first(dropCount)
+                let afterDrop = range.drop.first(try! Range.Index.Count(dropCount))
                 let remaining = max(0, size - dropCount)
 
                 #expect(afterDrop.count == remaining,
                        "Size \(size), drop \(dropCount): expected \(remaining), got \(afterDrop.count)")
 
                 for prefixCount in [0, 1, remaining / 2, remaining, remaining + 5] {
-                    let afterPrefix = afterDrop.prefix.first(prefixCount)
+                    let afterPrefix = afterDrop.prefix.first(try! Range.Index.Count(prefixCount))
                     let expected = min(prefixCount, remaining)
 
                     #expect(afterPrefix.count == expected,
@@ -1147,11 +1148,11 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
             #expect(afterDrop0.count == range.count)
 
             // prefix.first(size) should be identity
-            let afterPrefixAll = range.prefix.first(size)
+            let afterPrefixAll = range.prefix.first(try! Range.Index.Count(size))
             #expect(afterPrefixAll.count == range.count)
 
             // prefix.first(size + 100) should also be identity
-            let afterPrefixMore = range.prefix.first(size + 100)
+            let afterPrefixMore = range.prefix.first(try! Range.Index.Count(size + 100))
             #expect(afterPrefixMore.count == range.count)
         }
     }

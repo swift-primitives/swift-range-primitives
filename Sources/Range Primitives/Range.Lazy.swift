@@ -377,7 +377,12 @@ extension Range {
         ///
         /// Used by Drop/Prefix operations to construct adjusted ranges in O(1).
         @usableFromInline
-        init(__unchecked: Void, start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
+        init(
+            __unchecked: Void,
+            start: Range.Index,
+            end: Range.Index,
+            transform: @escaping @Sendable (Range.Index) -> Bound
+        ) {
             self.start = start
             self.end = end
             // Safe: caller guarantees end >= start

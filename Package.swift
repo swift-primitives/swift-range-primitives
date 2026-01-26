@@ -16,6 +16,10 @@ let package = Package(
             name: "Range Primitives",
             targets: ["Range Primitives"]
         ),
+        .library(
+            name: "Range Primitives Test Support",
+            targets: ["Range Primitives Test Support"]
+        ),
     ],
     dependencies: [
         .package(path: "../swift-index-primitives"),
@@ -33,10 +37,19 @@ let package = Package(
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
             ]
         ),
+        .target(
+            name: "Range Primitives Test Support",
+            dependencies: [
+                "Range Primitives",
+                .product(name: "Index Primitives Test Support", package: "swift-index-primitives"),
+            ],
+            path: "Tests/Support"
+        ),
         .testTarget(
             name: "Range Primitives Tests",
             dependencies: [
                 "Range Primitives",
+                "Range Primitives Test Support",
             ]
         ),
     ],
