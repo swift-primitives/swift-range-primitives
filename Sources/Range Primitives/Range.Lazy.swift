@@ -134,7 +134,7 @@ extension Range {
                 guard current < end else { return nil }
                 let result = transform(current)
                 // Proof: current < end, so current + 1 <= end <= Int.max
-                current = Range.Index(__unchecked: (), current.position.rawValue + 1)
+                current = Range.Index(__unchecked: (), Ordinal.Position(current.position.rawValue + 1))
                 return result
             }
         }
@@ -212,7 +212,7 @@ extension Range {
                     } else {
                         // Non-empty: start at end - 1
                         // Proof: start < end, so end - 1 >= start >= 0
-                        self.current = Range.Index(__unchecked: (), end.position.rawValue - 1)
+                        self.current = Range.Index(__unchecked: (), Ordinal.Position(end.position.rawValue - 1))
                         self.exhausted = false
                     }
                 }
@@ -228,7 +228,7 @@ extension Range {
                         exhausted = true
                     } else {
                         // Proof: current > start >= 0, so current - 1 >= 0
-                        current = Range.Index(__unchecked: (), current.position.rawValue - 1)
+                        current = Range.Index(__unchecked: (), Ordinal.Position(current.position.rawValue - 1))
                     }
 
                     return result
@@ -275,13 +275,13 @@ extension Range {
             mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
                 guard !isEmpty else { return }
                 // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-                var i = Range.Index(__unchecked: (), end.position.rawValue - 1)
+                var i = Range.Index(__unchecked: (), Ordinal.Position(end.position.rawValue - 1))
                 while i >= start {
                     let bound = transform(i)
                     body(bound)
                     if i == start { break }
                     // Proof: i > start >= 0, so i - 1 >= 0
-                    i = Range.Index(__unchecked: (), i.position.rawValue - 1)
+                    i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue - 1))
                 }
             }
 
@@ -289,12 +289,12 @@ extension Range {
             mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
                 guard !isEmpty else { return }
                 // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-                var i = Range.Index(__unchecked: (), end.position.rawValue - 1)
+                var i = Range.Index(__unchecked: (), Ordinal.Position(end.position.rawValue - 1))
                 while i >= start {
                     body(transform(i))
                     if i == start { break }
                     // Proof: i > start >= 0, so i - 1 >= 0
-                    i = Range.Index(__unchecked: (), i.position.rawValue - 1)
+                    i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue - 1))
                 }
                 // Mark as empty
                 start = end
@@ -446,7 +446,7 @@ extension Range {
                 let bound = transform(i)
                 body(bound)
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
+                i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
             }
         }
 
@@ -456,7 +456,7 @@ extension Range {
             while i < end {
                 body(transform(i))
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
+                i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
             }
             // Mark as empty
             start = end

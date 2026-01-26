@@ -42,7 +42,7 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
         let newStart: Range.Index
         if count.rawValue <= (base.end - base.start).rawValue {
             // Proof: count <= (end - start), so end - count >= start >= 0
-            newStart = Range.Index(__unchecked: (), base.end.position.rawValue - count.rawValue)
+            newStart = Range.Index(__unchecked: (), Ordinal.Position(base.end.position.rawValue - count.rawValue))
         } else {
             newStart = base.start
         }
@@ -63,14 +63,14 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
         guard !base.isEmpty else { return result }
 
         // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-        var i = Range.Index(__unchecked: (), base.end.position.rawValue - 1)
+        var i = Range.Index(__unchecked: (), Ordinal.Position(base.end.position.rawValue - 1))
         while i >= base.start {
             let element = base.transform(i)
             if !predicate(element) { break }
             result.append(element)
             if i == base.start { break }
             // Proof: i > start >= 0, so i - 1 >= 0
-            i = Range.Index(__unchecked: (), i.position.rawValue - 1)
+            i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue - 1))
         }
         return result
     }

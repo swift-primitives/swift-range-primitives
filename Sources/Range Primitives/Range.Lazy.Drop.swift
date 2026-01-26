@@ -40,7 +40,7 @@ extension Range.Lazy.Drop where Bound: Copyable {
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
         // Total: Index position + Count is always non-negative
         let advancedPosition = base.start.position.rawValue + count.rawValue
-        let newStart = Range.Index(__unchecked: (), min(advancedPosition, base.end.position.rawValue))
+        let newStart = Range.Index(__unchecked: (), Ordinal.Position(min(advancedPosition, base.end.position.rawValue)))
         return Range.Lazy<Bound>(__unchecked: (), start: newStart, end: base.end, transform: base.transform)
     }
 
@@ -62,13 +62,13 @@ extension Range.Lazy.Drop where Bound: Copyable {
             let element = base.transform(i)
             if dropping && predicate(element) {
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), i.position.rawValue + 1)
+                i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
                 continue
             }
             dropping = false
             result.append(element)
             // Proof: i < end, so i + 1 <= end
-            i = Range.Index(__unchecked: (), i.position.rawValue + 1)
+            i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
         }
         return result
     }

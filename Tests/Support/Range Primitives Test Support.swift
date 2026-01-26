@@ -14,80 +14,69 @@ import Index_Primitives_Test_Support
 
 // MARK: - Range.Lazy Convenience Initializer
 
-extension Range.Lazy where Bound == Int {
+extension Range.Lazy where Bound == UInt {
     /// Creates a lazy range from a Swift.Range<Int> for testing convenience.
+    ///
+    /// The transform receives the position as `Int` for test convenience.
     ///
     /// - Warning: This initializer is for testing only. Production code should
     ///   use the typed `Range.Index` initializers.
-//    @available(*, deprecated, message: "Test convenience only. Use typed Range.Index initializers in production.")
-    @_disfavoredOverload
     public init(
-        _ range: Swift.Range<Int>,
-        transform: @escaping @Sendable (Range.Index) -> Int
+        _ range: Swift.Range<UInt>,
+        transform: @escaping @Sendable (UInt) -> UInt = { $0 }
     ) {
         self.init(
             __unchecked: (),
-            start: Range.Index(__unchecked: (), range.lowerBound),
-            end: Range.Index(__unchecked: (), range.upperBound),
-            transform: { transform($0) }
-        )
-    }
-    
-//    @available(*, deprecated, message: "Test convenience only. Use typed Range.Index initializers in production.")
-    @_disfavoredOverload
-    public init(
-        _ range: Swift.Range<Int>,
-        transform: @escaping @Sendable (Int) -> Int
-    ) {
-        self.init(
-            __unchecked: (),
-            start: Range.Index(__unchecked: (), range.lowerBound),
-            end: Range.Index(__unchecked: (), range.upperBound),
+            start: Range.Index(__unchecked: (), Ordinal.Position(UInt(range.lowerBound))),
+            end: Range.Index(__unchecked: (), Ordinal.Position(UInt(range.upperBound))),
             transform: { transform($0.position.rawValue) }
-        )
-    }
-
-    /// Creates a lazy range from a Swift.Range<Int> with identity transform.
-    ///
-    /// - Warning: This initializer is for testing only.
-//    @available(*, deprecated, message: "Test convenience only. Use typed Range.Index initializers in production.")
-    @_disfavoredOverload
-    public init(
-        _ range: Swift.Range<Int>
-    ) {
-        self.init(
-            __unchecked: (),
-            start: Range.Index(__unchecked: (), range.lowerBound),
-            end: Range.Index(__unchecked: (), range.upperBound),
-            transform: { $0.position.rawValue }
         )
     }
 }
 
-// MARK: - Range.Index.Count Comparison with Int
+extension Range.Error {
+    /// Errors for domain-range initialization over Int.
+    public enum Int: Swift.Error {
+        /// The range count exceeds UInt.max (range too large for ordinal space).
+        case countOverflow
+    }
+}
 
-//extension Range.Index.Count {
-//    /// Compares count with an integer for testing convenience.
-////    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
-//    @_disfavoredOverload
-//    public static func == (lhs: Self, rhs: Int) -> Bool {
-//        lhs.rawValue == rhs
-//    }
-//
-//    /// Compares count with an integer for testing convenience.
-////    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
-//    @_disfavoredOverload
-//    public static func == (lhs: Int, rhs: Self) -> Bool {
-//        lhs == rhs.rawValue
-//    }
-//}
+extension Range.Lazy where Bound == Int {
+    /// Creates a lazy range over an integer domain interval.
+    ///
+    /// This initializer treats `range` as a **domain interval** (e.g., `-500..<500`),
+    /// not as ordinal positions. Internally, ordinal positions `0..<count` are used,
+    /// with offset translation to produce domain values.
+    ///
+    /// - Parameters:
+    ///   - range: The integer domain interval.
+    ///   - transform: A function applied to each domain value.
+    /// - Throws: `Range.Error.Int.countOverflow` if the range count exceeds `UInt.max`.
+    ///
+    /// - Warning: This initializer is for testing only. Production code should
+    ///   use the typed `Range.Index` initializers.
+    public init(
+        _ range: Swift.Range<Swift.Int>,
+        transform: @escaping @Sendable (Swift.Int) -> Swift.Int = { $0 }
+    ) throws(Range.Error.Int) {
+        // Calculate count (guaranteed non-negative by Range invariant)
+        let distance = range.upperBound - range.lowerBound
 
-//// MARK: - Range.Index.Count ExpressibleByIntegerLiteral
-//
-//extension Range.Index.Count: ExpressibleByIntegerLiteral {
-//    @available(*, deprecated, message: "Literal initialization bypasses validation. Use typed initializers.")
-//    @_disfavoredOverload
-//    public init(integerLiteral value: Int) {
-//        self.init(__unchecked: (), value)
-//    }
-//}
+        // Check if count fits in UInt (ordinal space)
+        guard distance >= .zero, UInt(bitPattern: distance) <= UInt.max else {
+            throw .countOverflow
+        }
+        let count = UInt(distance)
+
+        // Offset translation: ordinal position -> domain value
+        let offset = range.lowerBound
+
+        self.init(
+            __unchecked: (),
+            start: Range.Index.init(__unchecked: (), .zero),
+            end: Range.Index(__unchecked: (), Ordinal.Position(count)),
+            transform: { transform(offset + Swift.Int($0.position.rawValue)) }
+        )
+    }
+}

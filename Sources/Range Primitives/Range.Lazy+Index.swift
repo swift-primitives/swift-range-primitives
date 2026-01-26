@@ -80,7 +80,7 @@ extension Range.Lazy.Reversed {
         // Convert offset to Range.Index arithmetic
         // Reversed subscript: end - 1 - offset
         // Proof: precondition ensures count > 0, so end > start, so end - 1 >= 0
-        let lastIndex = Range.Index(__unchecked: (), end.position.rawValue - 1)
+        let lastIndex = Range.Index(__unchecked: (), Ordinal.Position(end.position.rawValue - 1))
         let rangeOffset = Range.Index.Offset(offset.rawValue)
         let position = try! lastIndex - rangeOffset  // Safe: precondition ensures valid
         return transform(position)
