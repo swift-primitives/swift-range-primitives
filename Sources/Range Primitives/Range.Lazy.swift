@@ -10,8 +10,12 @@
 // ===----------------------------------------------------------------------===//
 
 public import Property_Primitives
+public import Index_Primitives
 
 extension Range {
+    
+    public typealias Index = Index_Primitives.Index<Int>
+    
     /// A lazy range that produces `~Copyable` bounds on-demand.
     ///
     /// `Range.Lazy` stores integer bounds internally and applies a transformation
@@ -85,12 +89,12 @@ extension Range {
     /// matches the pattern used by `Array.Static` and `Array.Storage`.
     public struct Lazy<Bound: ~Copyable> {
         
-        public var start: Int
+        public var start: Range.Index
 
-        public var end: Int
+        public var end: Range.Index
 
         @usableFromInline
-        let transform: @Sendable (Int) -> Bound
+        let transform: @Sendable (Range.Index) -> Bound
 
         // MARK: - Nested Iterator
 
@@ -100,16 +104,16 @@ extension Range {
         /// from the outer type.
         public struct Iterator: ~Copyable {
             @usableFromInline
-            var current: Int
+            var current: Range.Index
 
             @usableFromInline
-            let end: Int
+            let end: Range.Index
 
             @usableFromInline
-            let transform: @Sendable (Int) -> Bound
+            let transform: @Sendable (Range.Index) -> Bound
 
             @inlinable
-            init(current: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
+            init(current: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                 self.current = current
                 self.end = end
                 self.transform = transform
@@ -119,7 +123,7 @@ extension Range {
             @inlinable
             public mutating func next() -> Bound? {
                 guard current < end else { return nil }
-                defer { current += 1 }
+                defer { current += .one }
                 return transform(current)
             }
         }
@@ -151,27 +155,27 @@ extension Range {
         /// from the outer type.
         public struct Reversed {
             @usableFromInline
-            var start: Int
+            var start: Range.Index
 
             @usableFromInline
-            var end: Int
+            var end: Range.Index
 
             @usableFromInline
-            let transform: @Sendable (Int) -> Bound
+            let transform: @Sendable (Range.Index) -> Bound
 
             /// Iterator for `Range.Lazy.Reversed`.
             public struct Iterator: ~Copyable {
                 @usableFromInline
-                var current: Int
+                var current: Range.Index
 
                 @usableFromInline
-                let start: Int
+                let start: Range.Index
 
                 @usableFromInline
-                let transform: @Sendable (Int) -> Bound
+                let transform: @Sendable (Range.Index) -> Bound
 
                 @inlinable
-                init(current: Int, start: Int, transform: @escaping @Sendable (Int) -> Bound) {
+                init(current: Range.Index, start: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                     self.current = current
                     self.start = start
                     self.transform = transform
@@ -181,13 +185,13 @@ extension Range {
                 @inlinable
                 public mutating func next() -> Bound? {
                     guard current >= start else { return nil }
-                    defer { current -= 1 }
+                    defer { current -= .one }
                     return transform(current)
                 }
             }
 
             @usableFromInline
-            init(start: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
+            init(start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                 self.start = start
                 self.end = end
                 self.transform = transform
@@ -195,7 +199,7 @@ extension Range {
 
             /// The number of elements in the range.
             @inlinable
-            public var count: Int { end - start }
+            public var count: Index.Count { end - start }
 
             /// A Boolean value indicating whether the range is empty.
             @inlinable
@@ -206,27 +210,27 @@ extension Range {
             /// The range is consumed by this operation.
             @inlinable
             public consuming func makeIterator() -> Iterator {
-                Iterator(current: end - 1, start: start, transform: transform)
+                Iterator(current: end - .one, start: start, transform: transform)
             }
 
             // MARK: - Internal Iteration
 
             @inlinable
             mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
-                var i = end - 1
+                var i = end - .one
                 while i >= start {
                     let bound = transform(i)
                     body(bound)
-                    i -= 1
+                    i -= .one
                 }
             }
 
             @inlinable
             mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
-                var i = end - 1
+                var i = end - .one
                 while i >= start {
                     body(transform(i))
-                    i -= 1
+                    i -= .one
                 }
                 // Mark as empty
                 start = end
@@ -277,7 +281,7 @@ extension Range {
         ///   - range: The integer range to iterate over.
         ///   - transform: A function that converts an integer position to the bound type.
         @inlinable
-        public init(_ range: Swift.Range<Int>, transform: @escaping @Sendable (Int) -> Bound) {
+        public init(_ range: Swift.Range<Range.Index>, transform: @escaping @Sendable (Range.Index) -> Bound) {
             self.start = range.lowerBound
             self.end = range.upperBound
             self.transform = transform
@@ -287,7 +291,7 @@ extension Range {
         ///
         /// Used by Drop/Prefix operations to construct adjusted ranges in O(1).
         @usableFromInline
-        init(start: Int, end: Int, transform: @escaping @Sendable (Int) -> Bound) {
+        init(start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
             self.start = start
             self.end = end
             self.transform = transform
@@ -297,7 +301,7 @@ extension Range {
 
         /// The number of elements in the range.
         @inlinable
-        public var count: Int { end - start }
+        public var count: Index.Count { end - start }
 
         /// A Boolean value indicating whether the range is empty.
         @inlinable

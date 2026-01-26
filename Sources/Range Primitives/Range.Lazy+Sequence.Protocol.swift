@@ -25,12 +25,12 @@ extension Range.Lazy.Reversed.Iterator: IteratorProtocol where Bound: Copyable {
 
 extension Range.Lazy: Swift.Sequence where Bound: Copyable {
     @inlinable
-    public var underestimatedCount: Int { end - start }
+    public var underestimatedCount: Int { count.rawValue }
 }
 
 extension Range.Lazy.Reversed: Swift.Sequence where Bound: Copyable {
     @inlinable
-    public var underestimatedCount: Int { end - start }
+    public var underestimatedCount: Int { count.rawValue }
 }
 
 // MARK: - Conditional Sequence.Protocol Conformance for Range.Lazy
@@ -65,7 +65,7 @@ extension Range.Lazy.Reversed: Sequence.`Protocol` where Bound: Copyable {
     /// Returns an iterator over the reversed range elements.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        Iterator(current: end - 1, start: start, transform: transform)
+        Iterator(current: end - .one, start: start, transform: transform)
     }
 }
 
