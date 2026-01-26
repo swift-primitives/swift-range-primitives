@@ -27,7 +27,7 @@ extension RangeLazyTests.Unit {
 
     @Test("init creates range with correct bounds")
     func initWithBounds() {
-        let range = Range.Lazy(0..<10) { $0 }
+        let range: Range.Lazy = Range.Lazy(0..<10) { $0 }
         #expect(range.count == 10)
         #expect(!range.isEmpty)
     }

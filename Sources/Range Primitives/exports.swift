@@ -10,3 +10,5 @@
 // ===----------------------------------------------------------------------===//
 
 @_exported public import Sequence_Primitives
+@_exported public import Index_Primitives
+@_exported public import Cyclic_Primitives

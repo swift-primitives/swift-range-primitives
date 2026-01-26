@@ -16,7 +16,7 @@ public import Index_Primitives
 /// This operator enables clean iteration patterns with phantom-typed indices:
 ///
 /// ```swift
-/// let count: Index<Element>.Count = 10
+/// let count = try! Index<Element>.Count(10)
 ///
 /// // Iterate over indices 0..<10
 /// (.zero..<count).forEach { index in
@@ -25,7 +25,7 @@ public import Index_Primitives
 /// }
 /// ```
 ///
-/// The returned `Range.Lazy` transforms integer positions into typed indices
+/// The returned `Range.Lazy` transforms range positions into typed indices
 /// on-demand, avoiding the need to store `~Copyable` values.
 ///
 /// - Parameters:
@@ -38,8 +38,9 @@ public func ..< <Tag: ~Copyable>(
     rhs: Index<Tag>.Count
 ) -> Range.Lazy<Index<Tag>> {
     Range.Lazy(
-        start: Range.Index(lhs),
-        end: Range.Index(rhs),
-        transform: { Index<Tag>($0) }
+        __unchecked: (),
+        start: Range.Index(lhs),  // retag: total
+        end: Range.Index(rhs),    // index from count: total
+        transform: { Index<Tag>($0) }  // retag back: total
     )
 }

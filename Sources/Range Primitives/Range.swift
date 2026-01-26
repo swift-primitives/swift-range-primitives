@@ -13,14 +13,14 @@
 ///
 /// ## The Index Domain Concept
 ///
-/// `Range.Lazy` operates over a **Copyable index domain** (currently `Int`), from which
+/// `Range.Lazy` operates over a **Copyable index domain** (`Index<Range>`), from which
 /// `~Copyable` bounds are generated on demand. This separation is the architectural core:
 ///
 /// | Aspect | Index Domain | Bound Projection |
 /// |--------|--------------|------------------|
-/// | Type | `Int` (Copyable) | `Bound: ~Copyable` |
+/// | Type | `Index<Range>` (Copyable) | `Bound: ~Copyable` |
 /// | Storage | Stored directly | Never stored |
-/// | Count | O(1): `end - start` | N/A |
+/// | Count | O(1): cached at init | N/A |
 ///
 /// ## Integration with Affine Primitives
 ///
@@ -40,3 +40,13 @@
 /// **generates** values on demand from an integer index domain. No `Bound` values are
 /// ever stored — they are created fresh by the transform function at each access.
 public enum Range {}
+
+// MARK: - Range.Error
+
+extension Range {
+    /// Errors that can occur in range operations.
+    public enum Error: Swift.Error, Hashable, Sendable {
+        /// The bounds are invalid (start > end).
+        case invalidBounds(start: Range.Index, end: Range.Index)
+    }
+}
