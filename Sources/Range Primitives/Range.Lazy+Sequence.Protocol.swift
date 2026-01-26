@@ -54,6 +54,7 @@ extension Range.Lazy: Sequence.Clearable where Bound: Copyable {
     @inlinable
     public mutating func removeAll() {
         start = end
+        _count = .zero
     }
 }
 
@@ -65,12 +66,7 @@ extension Range.Lazy.Reversed: Sequence.`Protocol` where Bound: Copyable {
     /// Returns an iterator over the reversed range elements.
     @inlinable
     public borrowing func makeIterator() -> Iterator {
-        guard !isEmpty else {
-            return Iterator(current: start, start: start, transform: transform)
-        }
-        // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-        let lastIndex = Range.Index(__unchecked: (), end.position.rawValue - 1)
-        return Iterator(current: lastIndex, start: start, transform: transform)
+        Iterator(start: start, end: end, transform: transform)
     }
 }
 
@@ -78,5 +74,6 @@ extension Range.Lazy.Reversed: Sequence.Clearable where Bound: Copyable {
     @inlinable
     public mutating func removeAll() {
         start = end
+        _count = .zero
     }
 }

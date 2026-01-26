@@ -100,7 +100,7 @@ extension Range {
         public var end: Range.Index
 
         @usableFromInline
-        let _count: Range.Index.Count
+        var _count: Range.Index.Count
 
         @usableFromInline
         let transform: @Sendable (Range.Index) -> Bound
@@ -174,7 +174,7 @@ extension Range {
             var end: Range.Index
 
             @usableFromInline
-            let _count: Range.Index.Count
+            var _count: Range.Index.Count
 
             @usableFromInline
             let transform: @Sendable (Range.Index) -> Bound
@@ -196,19 +196,31 @@ extension Range {
                 @usableFromInline
                 var exhausted: Bool
 
+                /// Creates an iterator from range bounds.
+                ///
+                /// Derives exhaustion from the range: empty (start == end) means
+                /// immediately exhausted; non-empty means current = end - 1.
                 @inlinable
-                init(current: Range.Index, start: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
-                    self.current = current
+                init(start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                     self.start = start
                     self.transform = transform
-                    self.exhausted = false
+
+                    if start == end {
+                        // Empty range: exhausted immediately
+                        self.current = start  // arbitrary but stable
+                        self.exhausted = true
+                    } else {
+                        // Non-empty: start at end - 1
+                        // Proof: start < end, so end - 1 >= start >= 0
+                        self.current = Range.Index(__unchecked: (), end.position.rawValue - 1)
+                        self.exhausted = false
+                    }
                 }
 
                 /// Advances to the next element and returns it, or `nil` if exhausted.
                 @inlinable
                 public mutating func next() -> Bound? {
                     guard !exhausted else { return nil }
-                    guard current >= start else { return nil }
 
                     let result = transform(current)
 
@@ -254,12 +266,7 @@ extension Range {
             /// The range is consumed by this operation.
             @inlinable
             public consuming func makeIterator() -> Iterator {
-                guard !isEmpty else {
-                    return Iterator(current: start, start: start, transform: transform)
-                }
-                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-                let lastIndex = Range.Index(__unchecked: (), end.position.rawValue - 1)
-                return Iterator(current: lastIndex, start: start, transform: transform)
+                Iterator(start: start, end: end, transform: transform)
             }
 
             // MARK: - Internal Iteration
@@ -291,6 +298,7 @@ extension Range {
                 }
                 // Mark as empty
                 start = end
+                _count = .zero
             }
 
             // MARK: - Property Accessors
@@ -452,6 +460,7 @@ extension Range {
             }
             // Mark as empty
             start = end
+            _count = .zero
         }
 
         // MARK: - Property Accessors

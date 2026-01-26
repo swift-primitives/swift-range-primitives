@@ -66,21 +66,21 @@ extension Range.Lazy where Bound == Int {
 
 // MARK: - Range.Index.Count Comparison with Int
 
-extension Range.Index.Count {
-    /// Compares count with an integer for testing convenience.
-//    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
-    @_disfavoredOverload
-    public static func == (lhs: Self, rhs: Int) -> Bool {
-        lhs.rawValue == rhs
-    }
-
-    /// Compares count with an integer for testing convenience.
-//    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
-    @_disfavoredOverload
-    public static func == (lhs: Int, rhs: Self) -> Bool {
-        lhs == rhs.rawValue
-    }
-}
+//extension Range.Index.Count {
+//    /// Compares count with an integer for testing convenience.
+////    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
+//    @_disfavoredOverload
+//    public static func == (lhs: Self, rhs: Int) -> Bool {
+//        lhs.rawValue == rhs
+//    }
+//
+//    /// Compares count with an integer for testing convenience.
+////    @available(*, deprecated, message: "Test convenience only. Use typed comparisons in production.")
+//    @_disfavoredOverload
+//    public static func == (lhs: Int, rhs: Self) -> Bool {
+//        lhs == rhs.rawValue
+//    }
+//}
 
 //// MARK: - Range.Index.Count ExpressibleByIntegerLiteral
 //
