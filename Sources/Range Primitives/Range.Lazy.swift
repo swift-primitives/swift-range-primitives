@@ -84,11 +84,10 @@ extension Range {
     /// so that they properly inherit the `~Copyable` constraint from `Bound`. This
     /// matches the pattern used by `Array.Static` and `Array.Storage`.
     public struct Lazy<Bound: ~Copyable> {
-        @usableFromInline
-        var start: Int
+        
+        public var start: Int
 
-        @usableFromInline
-        var end: Int
+        public var end: Int
 
         @usableFromInline
         let transform: @Sendable (Int) -> Bound

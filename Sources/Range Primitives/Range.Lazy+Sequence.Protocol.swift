@@ -21,6 +21,18 @@ extension Range.Lazy.Iterator: IteratorProtocol where Bound: Copyable {}
 
 extension Range.Lazy.Reversed.Iterator: IteratorProtocol where Bound: Copyable {}
 
+// MARK: - Swift.Sequence Conformance
+
+extension Range.Lazy: Swift.Sequence where Bound: Copyable {
+    @inlinable
+    public var underestimatedCount: Int { end - start }
+}
+
+extension Range.Lazy.Reversed: Swift.Sequence where Bound: Copyable {
+    @inlinable
+    public var underestimatedCount: Int { end - start }
+}
+
 // MARK: - Conditional Sequence.Protocol Conformance for Range.Lazy
 
 extension Range.Lazy: Sequence.`Protocol` where Bound: Copyable {
@@ -63,3 +75,4 @@ extension Range.Lazy.Reversed: Sequence.Clearable where Bound: Copyable {
         start = end
     }
 }
+
