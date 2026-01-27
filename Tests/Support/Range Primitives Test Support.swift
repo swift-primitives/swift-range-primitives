@@ -33,6 +33,14 @@ extension Range.Lazy where Bound == UInt {
             transform: { transform($0.position.rawValue) }
         )
     }
+    
+    @inlinable
+    public init(
+        count: Range.Index.Count,
+        transform: @escaping @Sendable (Int) -> Bound
+    ) {
+        self.init(count: count, transform: \.position.rawValue)
+    }
 }
 
 extension Range.Error {

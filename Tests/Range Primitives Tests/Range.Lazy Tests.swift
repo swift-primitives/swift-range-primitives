@@ -1280,23 +1280,21 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
         // Cardinal distance handles full UInt range.
         // Affine subtraction would fail for distances > Int.max.
 
-        let intMax = Range.Index.Count(UInt(Int.max))
-        
+        let intMax: Range.Index.Count = Range.Index.Count(UInt(Int.max))
 
         // Distance exactly Int.max
-        let rangeAtLimit = .zero..<intMax
+        let rangeAtLimit: Range.Lazy = Range.Lazy(count: intMax) { $0.position.rawValue }
         #expect(rangeAtLimit.count == intMax)
 
         // Distance Int.max + 1 (would FAIL with affine subtraction)
-        let rangeBeyond = .zero..<(intMax + .one)
-        #expect(rangeBeyond.count == intMax + .one)
+        let beyondIntMax = intMax + .one
+        let rangeBeyond: Range.Lazy = Range.Lazy(count: beyondIntMax) { $0.position.rawValue }
+        #expect(rangeBeyond.count == beyondIntMax)
 
-        
-        let x = intMax + 1000
-        
         // Distance Int.max + 1000
-        let rangeWellBeyond = .zero..<x
-        #expect(rangeWellBeyond == (intMax + 1000))
+        let wellBeyond: Range.Index.Count = intMax + Range.Index.Count(1000)
+        let rangeWellBeyond: Range.Lazy = Range.Lazy(count: wellBeyond) { $0.position.rawValue }
+        #expect(rangeWellBeyond.count == wellBeyond)
     }
 
     @Test
@@ -1308,7 +1306,7 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
 
         let range = Range.Lazy(start..<end) { $0 }
 
-        #expect(range.count == distance)
+        #expect(range.count == Range.Index.Count(distance))
 
         let cardinalDistance = try range.start.position.distance.forward(to: range.end.position)
         #expect(range.count.rawValue == cardinalDistance)
@@ -1320,12 +1318,12 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
 
         // Range ending near UInt.max
         let rangeNearMax = Range.Lazy((max - 100)..<max) { $0 }
-        #expect(rangeNearMax.count == 100)
+        #expect(rangeNearMax.count == Range.Index.Count(100))
 
         // Empty range near UInt.max
         let emptyNearMax = Range.Lazy((max - 1)..<(max - 1)) { $0 }
         #expect(emptyNearMax.isEmpty)
-        #expect(emptyNearMax.count == 0)
+        #expect(emptyNearMax.count == .zero)
     }
 
     @Test
@@ -1333,7 +1331,7 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
         // The largest possible range
         let range = Range.Lazy(0..<UInt.max) { $0 }
 
-        #expect(range.count == UInt.max)
+        #expect(range.count == Range.Index.Count(UInt.max))
 
         let distance = try range.start.position.distance.forward(to: range.end.position)
         #expect(distance.rawValue == UInt.max)
