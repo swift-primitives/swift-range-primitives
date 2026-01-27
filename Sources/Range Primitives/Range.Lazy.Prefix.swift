@@ -38,9 +38,7 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
-        // Total: Index position + Count is always non-negative
-        let advancedPosition = base.start.position.rawValue + count.rawValue
-        let newEnd = Range.Index(__unchecked: (), Ordinal.Position(min(advancedPosition, base.end.position.rawValue)))
+        let newEnd = base.start.advanced(by: count, clampedTo: base.end)
         return Range.Lazy<Bound>(__unchecked: (), start: base.start, end: newEnd, transform: base.transform)
     }
 

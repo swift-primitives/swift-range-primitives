@@ -38,16 +38,8 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
-        // Clamped subtraction: retreat end by (size - count) to get new start, but not below original start
-        let newStart: Range.Index
-        if count.rawValue <= (base.end - base.start).rawValue {
-            // Proof: count <= (end - start), so end - count >= start >= 0
-            newStart = Range.Index(__unchecked: (), Ordinal.Position(base.end.position.rawValue - count.rawValue))
-        } else {
-            newStart = base.start
-        }
-        let clamped = max(newStart, base.start)
-        return Range.Lazy<Bound>.Reversed(__unchecked: (), start: clamped, end: base.end, transform: base.transform)
+        let newStart = base.end.retreated(by: count, clampedTo: base.start)
+        return Range.Lazy<Bound>.Reversed(__unchecked: (), start: newStart, end: base.end, transform: base.transform)
     }
 
     /// Take elements while predicate is true: `.prefix.while { }` → O(n)

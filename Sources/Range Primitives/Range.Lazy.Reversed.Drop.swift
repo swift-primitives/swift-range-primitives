@@ -38,14 +38,7 @@ extension Range.Lazy.Reversed.Drop where Bound: Copyable {
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
-        // Clamped subtraction: retreat end by count, but not below start
-        let newEnd: Range.Index
-        if count.rawValue <= (base.end - base.start).rawValue {
-            // Proof: count <= (end - start), so end - count >= start >= 0
-            newEnd = Range.Index(__unchecked: (), Ordinal.Position(base.end.position.rawValue - count.rawValue))
-        } else {
-            newEnd = base.start
-        }
+        let newEnd = base.end.retreated(by: count, clampedTo: base.start)
         return Range.Lazy<Bound>.Reversed(__unchecked: (), start: base.start, end: newEnd, transform: base.transform)
     }
 

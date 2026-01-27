@@ -14,6 +14,24 @@ extension UnsafeMutableRawBufferPointer {
         start: UnsafeMutableRawPointer?,
         count: Range.Index.Count
     ) {
-        unsafe self.init(start: start, count: Int(count.rawValue))
+        unsafe self.init(start: start, count: Int(count.count.rawValue))
+    }
+
+    /// Allocates uninitialized memory with range-typed count and alignment.
+    @inlinable
+    public static func allocate(
+        count: Range.Index.Count,
+        alignment: Range.Index.Count
+    ) -> Self {
+        Self.allocate(byteCount: Int(count.count.rawValue), alignment: Int(alignment.count.rawValue))
+    }
+
+    /// Accesses the byte at the given range index.
+    @inlinable
+    public subscript(
+        _ index: Range.Index
+    ) -> UInt8 {
+        get { unsafe self[Int(index.position.rawValue)] }
+        nonmutating set { unsafe self[Int(index.position.rawValue)] = newValue }
     }
 }
