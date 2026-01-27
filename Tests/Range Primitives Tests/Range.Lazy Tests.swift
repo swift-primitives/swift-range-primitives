@@ -1198,45 +1198,36 @@ enum RangeLazyCardinalDistanceTests {
 }
 
 extension RangeLazyCardinalDistanceTests.Invariants {
+    @Test(arguments: [
+        (0, 0),       // empty
+        (0, 1),       // single element
+        (0, 100),     // normal range
+        (50, 150),    // offset range
+        (1000, 1000), // empty at offset
+    ])
+    func `INVARIANT: count equals cardinal distance between positions`(start: Range.Index, end: Range.Index) throws {
+        let cardinalDistance = try start.position.distance.forward(to: end.position)
 
-    @Test
-    func `INVARIANT: count equals cardinal distance between positions`() throws {
-        let testCases: [(start: Range.Index, end: Range.Index)] = [
-            (0, 0),       // empty
-            (0, 1),       // single element
-            (0, 100),     // normal range
-            (50, 150),    // offset range
-            (1000, 1000), // empty at offset
-        ]
+        let range = try Range.Lazy(start: start, end: end)
 
-        for (start, end) in testCases {
-            let cardinalDistance = try start.position.distance.forward(to: end.position)
-
-            let range = try Range.Lazy(start: start, end: end)
-
-            #expect(range.count.rawValue == cardinalDistance)
-        }
+        #expect(range.count.rawValue == cardinalDistance)
     }
 
-    @Test
-    func `INVARIANT: count matches iteration count exactly`() throws {
-        let testCases: [(start: Range.Index, end: Range.Index)] = [
-            (0, 0),
-            (0, 1),
-            (0, 10),
-            (5, 15),
-            (100, 100),
-            (100, 105),
-        ]
+    @Test(arguments: [
+        (0, 0),
+        (0, 1),
+        (0, 10),
+        (5, 15),
+        (100, 100),
+        (100, 105),
+    ])
+    func `INVARIANT: count matches iteration count exactly`(start: Range.Index, end: Range.Index) throws {
+        let range = try Range.Lazy(start: start, end: end)
 
-        for (start, end) in testCases {
-            let range = try Range.Lazy(start: start, end: end)
+        var iterationCount: Range.Index.Count = 0
+        range.forEach { _ in iterationCount += 1 }
 
-            var iterationCount: Range.Index.Count = 0
-            range.forEach { _ in iterationCount += 1 }
-
-            #expect(range.count == iterationCount)
-        }
+        #expect(range.count == iterationCount)
     }
 
     @Test
