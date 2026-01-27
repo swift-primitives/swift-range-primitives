@@ -1096,7 +1096,7 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
         let sizes: [Range.Index.Count] = [0, 1, 5, 20, 100]
 
         for size in sizes {
-            let range = try Range.Lazy(count: size) { $0.position.rawValue }
+            let range = try Range.Lazy(count: size)
 
             // Structurally meaningful: empty, minimal, exact, overflow
             let dropCandidates: [Range.Index.Count] = [0, 1, size, size + 5]
@@ -1212,7 +1212,7 @@ extension RangeLazyCardinalDistanceTests.Invariants {
         for (start, end) in testCases {
             let cardinalDistance = try start.position.distance.forward(to: end.position)
 
-            let range = try Range.Lazy(start: start, end: end) { $0.position.rawValue }
+            let range = try Range.Lazy(start: start, end: end)
 
             #expect(range.count.rawValue == cardinalDistance)
         }
@@ -1230,7 +1230,7 @@ extension RangeLazyCardinalDistanceTests.Invariants {
         ]
 
         for (start, end) in testCases {
-            let range = try Range.Lazy(start: start, end: end) { $0.position.rawValue }
+            let range = try Range.Lazy(start: start, end: end)
 
             var iterationCount: Range.Index.Count = 0
             range.forEach { _ in iterationCount += 1 }
@@ -1241,7 +1241,7 @@ extension RangeLazyCardinalDistanceTests.Invariants {
 
     @Test
     func `INVARIANT: count preserved through drop and prefix`() throws {
-        let range: Range.Lazy = Range.Lazy(count: 100) { $0.position.rawValue }
+        let range: Range.Lazy = Range.Lazy(count: 100)
 
         let dropped = range.drop.first(30)
         #expect(dropped.count == 70)
@@ -1258,7 +1258,7 @@ extension RangeLazyCardinalDistanceTests.Invariants {
 
     @Test
     func `INVARIANT: reversed range preserves count`() throws {
-        let range: Range.Lazy = Range.Lazy(count: 100) { $0.position.rawValue }
+        let range: Range.Lazy = Range.Lazy(count: 100)
         let reversed = range.reversed()
 
         #expect(reversed.count == range.count)
@@ -1283,17 +1283,17 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
         let intMax: Range.Index.Count = Range.Index.Count(UInt(Int.max))
 
         // Distance exactly Int.max
-        let rangeAtLimit: Range.Lazy = Range.Lazy(count: intMax) { $0.position.rawValue }
+        let rangeAtLimit: Range.Lazy = Range.Lazy(count: intMax)
         #expect(rangeAtLimit.count == intMax)
 
         // Distance Int.max + 1 (would FAIL with affine subtraction)
         let beyondIntMax = intMax + .one
-        let rangeBeyond: Range.Lazy = Range.Lazy(count: beyondIntMax) { $0.position.rawValue }
+        let rangeBeyond: Range.Lazy = Range.Lazy(count: beyondIntMax)
         #expect(rangeBeyond.count == beyondIntMax)
 
         // Distance Int.max + 1000
         let wellBeyond: Range.Index.Count = intMax + Range.Index.Count(1000)
-        let rangeWellBeyond: Range.Lazy = Range.Lazy(count: wellBeyond) { $0.position.rawValue }
+        let rangeWellBeyond: Range.Lazy = Range.Lazy(count: wellBeyond)
         #expect(rangeWellBeyond.count == wellBeyond)
     }
 

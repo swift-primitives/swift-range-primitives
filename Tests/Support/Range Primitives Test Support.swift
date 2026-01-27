@@ -37,9 +37,17 @@ extension Range.Lazy where Bound == UInt {
     @inlinable
     public init(
         count: Range.Index.Count,
-        transform: @escaping @Sendable (Int) -> Bound
+        transform: @escaping @Sendable (Int) -> Bound = { $0.magnitude }
     ) {
         self.init(count: count, transform: \.position.rawValue)
+    }
+    
+    public init(
+        start: Range.Index,
+        end: Range.Index,
+        transform: @escaping @Sendable (Int) -> Bound = { $0.magnitude }
+    ) throws(Range.Error) {
+        try self.init(start: start, end: end, transform: \.position.rawValue)
     }
 }
 
