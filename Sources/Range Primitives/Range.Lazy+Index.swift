@@ -28,12 +28,17 @@ extension Range.Lazy {
     ///
     /// - Parameter range: A Swift range of typed indices.
     @inlinable
-    public init<Tag: ~Copyable>(_ range: Swift.Range<Index<Tag>>) where Bound == Index<Tag> {
+    public init<Tag: ~Copyable>(
+        _ range: Swift.Range<Index<Tag>>
+    ) where Bound == Index<Tag> {
+        let start = Range.Index(range.lowerBound)
+        let end = Range.Index(range.upperBound)
+        // Swift.Range guarantees lowerBound <= upperBound, so no validation needed
         self.init(
             __unchecked: (),
-            start: Range.Index(range.lowerBound),  // retag: total
-            end: Range.Index(range.upperBound),    // retag: total
-            transform: { Index<Tag>($0) }          // retag back: total
+            start: start,
+            end: end,
+            transform: { Index<Tag>($0) }
         )
     }
 }

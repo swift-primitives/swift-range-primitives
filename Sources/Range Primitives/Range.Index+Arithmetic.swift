@@ -23,14 +23,20 @@ public import Index_Primitives
 ///   - rhs: The count to advance by.
 /// - Returns: The advanced range index.
 @inlinable
-public func + (lhs: Range.Index, rhs: Range.Index.Count) -> Range.Index {
+public func + (
+    lhs: Range.Index,
+    rhs: Range.Index.Count
+) -> Range.Index {
     // Total: lhs.position >= 0, rhs.count >= 0, so result >= 0
     Range.Index(__unchecked: (), Ordinal.Position(lhs.position.rawValue + rhs.count.rawValue))
 }
 
 /// Advances a range index by a count (commutative).
 @inlinable
-public func + (lhs: Range.Index.Count, rhs: Range.Index) -> Range.Index {
+public func + (
+    lhs: Range.Index.Count,
+    rhs: Range.Index
+) -> Range.Index {
     rhs + lhs
 }
 

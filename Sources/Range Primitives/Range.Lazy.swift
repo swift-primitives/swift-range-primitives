@@ -248,8 +248,8 @@ extension Range {
             init(__unchecked: Void, start: Range.Index, end: Range.Index, transform: @escaping @Sendable (Range.Index) -> Bound) {
                 self.start = start
                 self.end = end
-                // Safe: caller guarantees end >= start
-                self._count = Range.Index.Count(__unchecked: (), end - start)
+                // Safe: caller guarantees end >= start, so distance.forward never throws
+                self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
                 self.transform = transform
             }
 
@@ -376,8 +376,8 @@ extension Range {
             }
             self.start = start
             self.end = end
-            // Safe after validation: end >= start means offset is non-negative
-            self._count = Range.Index.Count(__unchecked: (), end - start)
+            // Safe after validation: end >= start, so distance.forward never throws
+            self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
             self.transform = transform
         }
 
@@ -393,8 +393,8 @@ extension Range {
         ) {
             self.start = start
             self.end = end
-            // Safe: caller guarantees end >= start
-            self._count = Range.Index.Count(__unchecked: (), end - start)
+            // Safe: caller guarantees end >= start, so distance.forward never throws
+            self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
             self.transform = transform
         }
 

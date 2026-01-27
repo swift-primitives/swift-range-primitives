@@ -37,10 +37,14 @@ public func ..< <Tag: ~Copyable>(
     lhs: Index<Tag>,
     rhs: Index<Tag>.Count
 ) -> Range.Lazy<Index<Tag>> {
-    Range.Lazy(
+    let start = Range.Index(lhs)
+    let end = Range.Index(rhs)
+    // Index and Count are both non-negative, and Index < Count is the expected pattern
+    // No validation needed - start is always <= end when lhs.position <= rhs (count as position)
+    return Range.Lazy(
         __unchecked: (),
-        start: Range.Index(lhs),  // retag: total
-        end: Range.Index(rhs),    // index from count: total
-        transform: { Index<Tag>($0) }  // retag back: total
+        start: start,
+        end: end,
+        transform: { Index<Tag>($0) }
     )
 }

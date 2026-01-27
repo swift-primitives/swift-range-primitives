@@ -25,10 +25,11 @@ extension Range.Lazy where Bound == UInt {
         _ range: Swift.Range<UInt>,
         transform: @escaping @Sendable (UInt) -> UInt = { $0 }
     ) {
+        // Safe: Swift.Range guarantees upperBound >= lowerBound
         self.init(
             __unchecked: (),
-            start: Range.Index(__unchecked: (), Ordinal.Position(UInt(range.lowerBound))),
-            end: Range.Index(__unchecked: (), Ordinal.Position(UInt(range.upperBound))),
+            start: Range.Index(__unchecked: (), Ordinal.Position(range.lowerBound)),
+            end: Range.Index(__unchecked: (), Ordinal.Position(range.upperBound)),
             transform: { transform($0.position.rawValue) }
         )
     }
@@ -72,9 +73,10 @@ extension Range.Lazy where Bound == Int {
         // Offset translation: ordinal position -> domain value
         let offset = range.lowerBound
 
+        // Safe: start is .zero and end is count, so end >= start
         self.init(
             __unchecked: (),
-            start: Range.Index.init(__unchecked: (), .zero),
+            start: Range.Index(__unchecked: (), .zero),
             end: Range.Index(__unchecked: (), Ordinal.Position(count)),
             transform: { transform(offset + Swift.Int($0.position.rawValue)) }
         )

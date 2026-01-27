@@ -1185,3 +1185,169 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
         #expect(ptd == [3])
     }
 }
+
+// MARK: - Cardinal Distance Invariant Tests
+//
+// These tests verify the principled approach of using cardinal distance
+// (Ordinal.Position.distance.forward) instead of affine subtraction
+// for computing range counts. Cardinal distance handles the full UInt range.
+
+enum RangeLazyCardinalDistanceTests {
+    @Suite struct Invariants {}
+    @Suite struct LargeRanges {}
+}
+
+extension RangeLazyCardinalDistanceTests.Invariants {
+
+    @Test
+    func `INVARIANT: count equals cardinal distance between positions`() throws {
+        let testCases: [(start: Range.Index, end: Range.Index)] = [
+            (0, 0),       // empty
+            (0, 1),       // single element
+            (0, 100),     // normal range
+            (50, 150),    // offset range
+            (1000, 1000), // empty at offset
+        ]
+
+        for (start, end) in testCases {
+            let cardinalDistance = try start.position.distance.forward(to: end.position)
+
+            let range = try Range.Lazy(start: start, end: end) { $0.position.rawValue }
+
+            #expect(range.count.rawValue == cardinalDistance)
+        }
+    }
+
+    @Test
+    func `INVARIANT: count matches iteration count exactly`() throws {
+        let testCases: [(start: Range.Index, end: Range.Index)] = [
+            (0, 0),
+            (0, 1),
+            (0, 10),
+            (5, 15),
+            (100, 100),
+            (100, 105),
+        ]
+
+        for (start, end) in testCases {
+            let range = try Range.Lazy(start: start, end: end) { $0.position.rawValue }
+
+            var iterationCount: Range.Index.Count = 0
+            range.forEach { _ in iterationCount += 1 }
+
+            #expect(range.count == iterationCount)
+        }
+    }
+
+    @Test
+    func `INVARIANT: count preserved through drop and prefix`() throws {
+        let range: Range.Lazy = Range.Lazy(count: 100) { $0.position.rawValue }
+
+        let dropped = range.drop.first(30)
+        #expect(dropped.count == 70)
+
+        let droppedDistance = try dropped.start.position.distance.forward(to: dropped.end.position)
+        #expect(dropped.count.rawValue == droppedDistance)
+
+        let prefixed = range.prefix.first(40)
+        #expect(prefixed.count == 40)
+
+        let prefixedDistance = try prefixed.start.position.distance.forward(to: prefixed.end.position)
+        #expect(prefixed.count.rawValue == prefixedDistance)
+    }
+
+    @Test
+    func `INVARIANT: reversed range preserves count`() throws {
+        let range: Range.Lazy = Range.Lazy(count: 100) { $0.position.rawValue }
+        let reversed = range.reversed()
+
+        #expect(reversed.count == range.count)
+
+        var forwardCount: UInt = 0
+        range.forEach { _ in forwardCount += 1 }
+
+        var reversedCount: UInt = 0
+        reversed.forEach { _ in reversedCount += 1 }
+
+        #expect(forwardCount == reversedCount)
+    }
+}
+
+extension RangeLazyCardinalDistanceTests.LargeRanges {
+
+    @Test
+    func `INVARIANT: ranges exceeding Int.max distance work`() throws {
+        // Cardinal distance handles full UInt range.
+        // Affine subtraction would fail for distances > Int.max.
+
+        let intMax = Range.Index.Count(UInt(Int.max))
+        
+
+        // Distance exactly Int.max
+        let rangeAtLimit = .zero..<intMax
+        #expect(rangeAtLimit.count == intMax)
+
+        // Distance Int.max + 1 (would FAIL with affine subtraction)
+        let rangeBeyond = .zero..<(intMax + .one)
+        #expect(rangeBeyond.count == intMax + .one)
+
+        
+        let x = intMax + 1000
+        
+        // Distance Int.max + 1000
+        let rangeWellBeyond = .zero..<x
+        #expect(rangeWellBeyond == (intMax + 1000))
+    }
+
+    @Test
+    func `INVARIANT: offset ranges with large distances work`() throws {
+        let intMax = UInt(Int.max)
+        let start: UInt = 1000
+        let distance = intMax + 500
+        let end = start + distance
+
+        let range = Range.Lazy(start..<end) { $0 }
+
+        #expect(range.count == distance)
+
+        let cardinalDistance = try range.start.position.distance.forward(to: range.end.position)
+        #expect(range.count.rawValue == cardinalDistance)
+    }
+
+    @Test
+    func `INVARIANT: ranges near UInt.max work`() throws {
+        let max = UInt.max
+
+        // Range ending near UInt.max
+        let rangeNearMax = Range.Lazy((max - 100)..<max) { $0 }
+        #expect(rangeNearMax.count == 100)
+
+        // Empty range near UInt.max
+        let emptyNearMax = Range.Lazy((max - 1)..<(max - 1)) { $0 }
+        #expect(emptyNearMax.isEmpty)
+        #expect(emptyNearMax.count == 0)
+    }
+
+    @Test
+    func `INVARIANT: maximum possible range 0 to UInt.max`() throws {
+        // The largest possible range
+        let range = Range.Lazy(0..<UInt.max) { $0 }
+
+        #expect(range.count == UInt.max)
+
+        let distance = try range.start.position.distance.forward(to: range.end.position)
+        #expect(distance.rawValue == UInt.max)
+    }
+
+    @Test
+    func `INVARIANT: drop and prefix near UInt.max`() throws {
+        let max = UInt.max
+        let range = Range.Lazy((max - 50)..<max) { $0 }
+
+        let dropped = range.drop.first(20)
+        #expect(dropped.count == 30)
+
+        let prefixed = range.prefix.first(15)
+        #expect(prefixed.count == 15)
+    }
+}

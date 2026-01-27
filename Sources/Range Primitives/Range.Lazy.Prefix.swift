@@ -37,9 +37,17 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     /// range.prefix.first(try .init(3))  // Range.Lazy(0..<3)
     /// ```
     @inlinable
-    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
+    public consuming func first(
+        _ count: Range.Index.Count
+    ) -> Range.Lazy<Bound> {
         let newEnd = base.start.advanced(by: count, clampedTo: base.end)
-        return Range.Lazy<Bound>(__unchecked: (), start: base.start, end: newEnd, transform: base.transform)
+        // Safe: newEnd is clamped, and base.start <= base.end (invariant), so base.start <= newEnd
+        return Range.Lazy<Bound>(
+            __unchecked: (),
+            start: base.start,
+            end: newEnd,
+            transform: base.transform
+        )
     }
 
     /// Take elements while predicate is true: `.prefix.while { }` → O(n)

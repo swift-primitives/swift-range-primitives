@@ -37,9 +37,17 @@ extension Range.Lazy.Drop where Bound: Copyable {
     /// range.drop.first(try .init(3))  // Range.Lazy(3..<10)
     /// ```
     @inlinable
-    public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound> {
+    public consuming func first(
+        _ count: Range.Index.Count
+    ) -> Range.Lazy<Bound> {
         let newStart = base.start.advanced(by: count, clampedTo: base.end)
-        return Range.Lazy<Bound>(__unchecked: (), start: newStart, end: base.end, transform: base.transform)
+        // Safe: newStart is clamped to base.end, so newStart <= base.end
+        return Range.Lazy<Bound>(
+            __unchecked: (),
+            start: newStart,
+            end: base.end,
+            transform: base.transform
+        )
     }
 
     /// Skip elements while predicate is true: `.drop.while { }` → O(n)
