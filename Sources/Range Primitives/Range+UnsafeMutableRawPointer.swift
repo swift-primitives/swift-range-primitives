@@ -13,6 +13,6 @@ extension UnsafeMutableRawPointer {
     public func advanced(
         by index: Range.Index
     ) -> Self {
-        unsafe self.advanced(by: Int(bitPattern: index.position.rawValue))
+        unsafe self.advanced(by: Int(bitPattern: index))
     }
 }

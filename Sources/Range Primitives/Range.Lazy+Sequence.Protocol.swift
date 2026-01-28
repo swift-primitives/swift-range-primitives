@@ -25,12 +25,12 @@ extension Range.Lazy.Reversed.Iterator: IteratorProtocol where Bound: Copyable {
 
 extension Range.Lazy: Swift.Sequence where Bound: Copyable {
     @inlinable
-    public var underestimatedCount: Int { Int(clamping: count.count.rawValue) }
+    public var underestimatedCount: Int { Int(clamping: count) }
 }
 
 extension Range.Lazy.Reversed: Swift.Sequence where Bound: Copyable {
     @inlinable
-    public var underestimatedCount: Int { Int(clamping: count.count.rawValue) }
+    public var underestimatedCount: Int { Int(clamping: count) }
 }
 
 // MARK: - Conditional Sequence.Protocol Conformance for Range.Lazy

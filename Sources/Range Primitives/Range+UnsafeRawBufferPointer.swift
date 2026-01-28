@@ -14,7 +14,7 @@ extension UnsafeRawBufferPointer {
         start: UnsafeRawPointer?,
         count: Range.Index.Count
     ) {
-        unsafe self.init(start: start, count: Int(bitPattern: count.count.rawValue))
+        unsafe self.init(start: start, count: Int(bitPattern: count))
     }
 
     /// Accesses the byte at the given range index.
@@ -22,6 +22,6 @@ extension UnsafeRawBufferPointer {
     public subscript(
         _ index: Range.Index
     ) -> UInt8 {
-        unsafe self[Int(bitPattern: index.position.rawValue)]
+        unsafe self[Int(bitPattern: index)]
     }
 }

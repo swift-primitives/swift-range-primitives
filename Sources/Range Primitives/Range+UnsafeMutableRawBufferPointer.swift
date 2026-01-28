@@ -14,7 +14,7 @@ extension UnsafeMutableRawBufferPointer {
         start: UnsafeMutableRawPointer?,
         count: Range.Index.Count
     ) {
-        unsafe self.init(start: start, count: Int(bitPattern: count.count.rawValue))
+        unsafe self.init(start: start, count: Int(bitPattern: count))
     }
 
     /// Allocates uninitialized memory with range-typed count and alignment.
@@ -23,7 +23,7 @@ extension UnsafeMutableRawBufferPointer {
         count: Range.Index.Count,
         alignment: Range.Index.Count
     ) -> Self {
-        Self.allocate(byteCount: Int(bitPattern: count.count.rawValue), alignment: Int(bitPattern: alignment.count.rawValue))
+        Self.allocate(byteCount: Int(bitPattern: count), alignment: Int(bitPattern: alignment))
     }
 
     /// Accesses the byte at the given range index.
@@ -31,7 +31,7 @@ extension UnsafeMutableRawBufferPointer {
     public subscript(
         _ index: Range.Index
     ) -> UInt8 {
-        get { unsafe self[Int(bitPattern: index.position.rawValue)] }
-        nonmutating set { unsafe self[Int(bitPattern: index.position.rawValue)] = newValue }
+        get { unsafe self[Int(bitPattern: index)] }
+        nonmutating set { unsafe self[Int(bitPattern: index)] = newValue }
     }
 }
