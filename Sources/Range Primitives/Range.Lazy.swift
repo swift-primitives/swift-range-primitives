@@ -211,8 +211,8 @@ extension Range {
                         self.exhausted = true
                     } else {
                         // Non-empty: start at end - 1
-                        // Proof: start < end, so end - 1 >= start >= 0
-                        self.current = Range.Index(__unchecked: (), Ordinal(end.position.rawValue - 1))
+                        // Safe: start < end, so end > 0
+                        self.current = try! end.predecessor.exact()
                         self.exhausted = false
                     }
                 }
@@ -227,8 +227,8 @@ extension Range {
                     if current == start {
                         exhausted = true
                     } else {
-                        // Proof: current > start >= 0, so current - 1 >= 0
-                        current = Range.Index(__unchecked: (), Ordinal(current.position.rawValue - 1))
+                        // Safe: current > start >= 0, so current > 0
+                        current = try! current.predecessor.exact()
                     }
 
                     return result
@@ -274,27 +274,27 @@ extension Range {
             @inlinable
             mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
                 guard !isEmpty else { return }
-                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-                var i = Range.Index(__unchecked: (), Ordinal(end.position.rawValue - 1))
+                // Safe: !isEmpty means end > start >= 0, so end > 0
+                var i = try! end.predecessor.exact()
                 while i >= start {
                     let bound = transform(i)
                     body(bound)
                     if i == start { break }
-                    // Proof: i > start >= 0, so i - 1 >= 0
-                    i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue - 1))
+                    // Safe: i > start >= 0, so i > 0
+                    i = try! i.predecessor.exact()
                 }
             }
 
             @inlinable
             mutating func _consumingDrain(_ body: (consuming Bound) -> Void) {
                 guard !isEmpty else { return }
-                // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-                var i = Range.Index(__unchecked: (), Ordinal(end.position.rawValue - 1))
+                // Safe: !isEmpty means end > start >= 0, so end > 0
+                var i = try! end.predecessor.exact()
                 while i >= start {
                     body(transform(i))
                     if i == start { break }
-                    // Proof: i > start >= 0, so i - 1 >= 0
-                    i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue - 1))
+                    // Safe: i > start >= 0, so i > 0
+                    i = try! i.predecessor.exact()
                 }
                 // Mark as empty
                 start = end

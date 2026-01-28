@@ -54,15 +54,15 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
         var result: [Bound] = []
         guard !base.isEmpty else { return result }
 
-        // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-        var i = Range.Index(__unchecked: (), Ordinal(base.end.position.rawValue - 1))
+        // Safe: !isEmpty means end > start >= 0, so end > 0
+        var i = try! base.end.predecessor.exact()
         while i >= base.start {
             let element = base.transform(i)
             if !predicate(element) { break }
             result.append(element)
             if i == base.start { break }
-            // Proof: i > start >= 0, so i - 1 >= 0
-            i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue - 1))
+            // Safe: i > start >= 0, so i > 0
+            i = try! i.predecessor.exact()
         }
         return result
     }

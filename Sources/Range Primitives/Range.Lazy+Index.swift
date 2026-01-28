@@ -31,14 +31,14 @@ extension Range.Lazy {
     public init<Tag: ~Copyable>(
         _ range: Swift.Range<Index<Tag>>
     ) where Bound == Index<Tag> {
-        let start = Range.Index(range.lowerBound)
-        let end = Range.Index(range.upperBound)
+        let start: Range.Index = range.lowerBound.retag()
+        let end: Range.Index = range.upperBound.retag()
         // Swift.Range guarantees lowerBound <= upperBound, so no validation needed
         self.init(
             __unchecked: (),
             start: start,
             end: end,
-            transform: { Index<Tag>($0) }
+            transform: { $0.retag() }
         )
     }
 }
@@ -84,8 +84,8 @@ extension Range.Lazy.Reversed {
         precondition(offset.vector.rawValue < Int(bitPattern: count), "Offset out of bounds")
         // Convert offset to Range.Index arithmetic
         // Reversed subscript: end - 1 - offset
-        // Proof: precondition ensures count > 0, so end > start, so end - 1 >= 0
-        let lastIndex = Range.Index(__unchecked: (), Ordinal(end.position.rawValue - 1))
+        // Safe: precondition ensures count > 0, so end > start, so end > 0
+        let lastIndex = try! end.predecessor.exact()
         let rangeOffset = Range.Index.Offset(offset.vector)
         let position = try! lastIndex - rangeOffset  // Safe: precondition ensures valid
         return transform(position)
