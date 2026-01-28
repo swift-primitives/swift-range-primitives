@@ -29,12 +29,25 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "Range Primitives",
+            name: "Range Primitives Core",
             dependencies: [
                 .product(name: "Index Primitives", package: "swift-index-primitives"),
                 .product(name: "Cyclic Primitives", package: "swift-cyclic-primitives"),
                 .product(name: "Property Primitives", package: "swift-property-primitives"),
                 .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+            ]
+        ),
+        .target(
+            name: "Range Primitives",
+            dependencies: [
+                "Range Primitives Core",
+                "Range Primitives Standard Library Integration",
+            ]
+        ),
+        .target(
+            name: "Range Primitives Standard Library Integration",
+            dependencies: [
+                "Range Primitives Core",
             ]
         ),
         .target(
