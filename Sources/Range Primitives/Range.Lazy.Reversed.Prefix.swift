@@ -38,7 +38,7 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// ```
     @inlinable
     public consuming func first(_ count: Range.Index.Count) -> Range.Lazy<Bound>.Reversed {
-        let newStart = base.end.retreated(by: count, clampedTo: base.start)
+        let newStart = base.end.retreat.clamped(by: count, to: base.start)
         return Range.Lazy<Bound>.Reversed(__unchecked: (), start: newStart, end: base.end, transform: base.transform)
     }
 

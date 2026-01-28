@@ -40,7 +40,7 @@ extension Range.Lazy.Prefix where Bound: Copyable {
     public consuming func first(
         _ count: Range.Index.Count
     ) -> Range.Lazy<Bound> {
-        let newEnd = base.start.advanced(by: count, clampedTo: base.end)
+        let newEnd = base.start.advance.clamped(by: count, to: base.end)
         // Safe: newEnd is clamped, and base.start <= base.end (invariant), so base.start <= newEnd
         return Range.Lazy<Bound>(
             __unchecked: (),
@@ -68,7 +68,7 @@ extension Range.Lazy.Prefix where Bound: Copyable {
             if !predicate(element) { break }
             result.append(element)
             // Proof: i < end, so i + 1 <= end
-            i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue + 1))
+            i += .one
         }
         return result
     }

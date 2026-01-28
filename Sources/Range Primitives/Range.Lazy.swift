@@ -133,8 +133,8 @@ extension Range {
             public mutating func next() -> Bound? {
                 guard current < end else { return nil }
                 let result = transform(current)
-                // Proof: current < end, so current + 1 <= end <= Int.max
-                current = Range.Index(__unchecked: (), Ordinal(current.position.rawValue + 1))
+                // Proof: current < end, so current + 1 <= end
+                current = current + .one
                 return result
             }
         }
@@ -446,7 +446,7 @@ extension Range {
                 let bound = transform(i)
                 body(bound)
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue + 1))
+                i += .one
             }
         }
 
@@ -456,7 +456,7 @@ extension Range {
             while i < end {
                 body(transform(i))
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue + 1))
+                i += .one
             }
             // Mark as empty
             start = end
