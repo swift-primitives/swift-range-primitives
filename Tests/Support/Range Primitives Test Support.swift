@@ -17,7 +17,7 @@ import Index_Primitives_Test_Support
 extension Range.Lazy where Bound == UInt {
     /// Creates a lazy range from a Swift.Range<Int> for testing convenience.
     ///
-    /// The transform receives the position as `Int` for test convenience.
+    /// The transform receives the position as `UInt` for test convenience.
     ///
     /// - Warning: This initializer is for testing only. Production code should
     ///   use the typed `Range.Index` initializers.
@@ -28,12 +28,12 @@ extension Range.Lazy where Bound == UInt {
         // Safe: Swift.Range guarantees upperBound >= lowerBound
         self.init(
             __unchecked: (),
-            start: Range.Index(__unchecked: (), Ordinal.Position(range.lowerBound)),
-            end: Range.Index(__unchecked: (), Ordinal.Position(range.upperBound)),
+            start: Range.Index(__unchecked: (), Ordinal(range.lowerBound)),
+            end: Range.Index(__unchecked: (), Ordinal(range.upperBound)),
             transform: { transform($0.position.rawValue) }
         )
     }
-    
+
     @inlinable
     public init(
         count: Range.Index.Count,
@@ -41,7 +41,7 @@ extension Range.Lazy where Bound == UInt {
     ) {
         self.init(count: count, transform: \.position.rawValue)
     }
-    
+
     public init(
         start: Range.Index,
         end: Range.Index,
@@ -93,8 +93,8 @@ extension Range.Lazy where Bound == Int {
         self.init(
             __unchecked: (),
             start: Range.Index(__unchecked: (), .zero),
-            end: Range.Index(__unchecked: (), Ordinal.Position(count)),
-            transform: { transform(offset + Swift.Int($0.position.rawValue)) }
+            end: Range.Index(__unchecked: (), Ordinal(count)),
+            transform: { transform(offset + Swift.Int(bitPattern: $0.position.rawValue)) }
         )
     }
 }

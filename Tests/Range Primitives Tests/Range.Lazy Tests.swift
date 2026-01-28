@@ -1189,7 +1189,7 @@ extension RangeLazyDropPrefixInvariantTests.Invariants {
 // MARK: - Cardinal Distance Invariant Tests
 //
 // These tests verify the principled approach of using cardinal distance
-// (Ordinal.Position.distance.forward) instead of affine subtraction
+// (Ordinal.distance.forward) instead of affine subtraction
 // for computing range counts. Cardinal distance handles the full UInt range.
 
 enum RangeLazyCardinalDistanceTests {
@@ -1210,7 +1210,7 @@ extension RangeLazyCardinalDistanceTests.Invariants {
 
         let range = try Range.Lazy(start: start, end: end)
 
-        #expect(range.count.rawValue == cardinalDistance)
+        #expect(range.count == Range.Index.Count(cardinalDistance))
     }
 
     @Test(arguments: [
@@ -1238,13 +1238,13 @@ extension RangeLazyCardinalDistanceTests.Invariants {
         #expect(dropped.count == 70)
 
         let droppedDistance = try dropped.start.position.distance.forward(to: dropped.end.position)
-        #expect(dropped.count.rawValue == droppedDistance)
+        #expect(dropped.count == Range.Index.Count(droppedDistance))
 
         let prefixed = range.prefix.first(40)
         #expect(prefixed.count == 40)
 
         let prefixedDistance = try prefixed.start.position.distance.forward(to: prefixed.end.position)
-        #expect(prefixed.count.rawValue == prefixedDistance)
+        #expect(prefixed.count == Range.Index.Count(prefixedDistance))
     }
 
     @Test
@@ -1300,7 +1300,7 @@ extension RangeLazyCardinalDistanceTests.LargeRanges {
         #expect(range.count == Range.Index.Count(distance))
 
         let cardinalDistance = try range.start.position.distance.forward(to: range.end.position)
-        #expect(range.count.rawValue == cardinalDistance)
+        #expect(range.count == Range.Index.Count(cardinalDistance))
     }
 
     @Test

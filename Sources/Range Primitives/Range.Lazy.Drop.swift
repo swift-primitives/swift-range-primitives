@@ -57,7 +57,7 @@ extension Range.Lazy.Drop where Bound: Copyable {
     ///
     /// ```swift
     /// let range = Range.Lazy(count: try .init(10)) { $0 }
-    /// range.drop.while { $0.position.rawValue < 5 }  // [5, 6, 7, 8, 9]
+    /// range.drop.while { $0.position < 5 }  // [5, 6, 7, 8, 9]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
@@ -68,13 +68,13 @@ extension Range.Lazy.Drop where Bound: Copyable {
             let element = base.transform(i)
             if dropping && predicate(element) {
                 // Proof: i < end, so i + 1 <= end
-                i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
+                i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue + 1))
                 continue
             }
             dropping = false
             result.append(element)
             // Proof: i < end, so i + 1 <= end
-            i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue + 1))
+            i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue + 1))
         }
         return result
     }

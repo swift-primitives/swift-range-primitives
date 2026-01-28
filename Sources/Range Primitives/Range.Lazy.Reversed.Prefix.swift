@@ -47,7 +47,7 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
     /// ```swift
     /// let count = try Range.Index.Count(10)
     /// let range = Range.Lazy(count: count) { $0 }.reversed()
-    /// range.prefix.while { $0.position.rawValue > 5 }  // [9, 8, 7, 6]
+    /// range.prefix.while { $0.position > 5 }  // [9, 8, 7, 6]
     /// ```
     @inlinable
     public consuming func `while`(_ predicate: (Bound) -> Bool) -> [Bound] {
@@ -55,14 +55,14 @@ extension Range.Lazy.Reversed.Prefix where Bound: Copyable {
         guard !base.isEmpty else { return result }
 
         // Proof: !isEmpty means end > start >= 0, so end - 1 >= 0
-        var i = Range.Index(__unchecked: (), Ordinal.Position(base.end.position.rawValue - 1))
+        var i = Range.Index(__unchecked: (), Ordinal(base.end.position.rawValue - 1))
         while i >= base.start {
             let element = base.transform(i)
             if !predicate(element) { break }
             result.append(element)
             if i == base.start { break }
             // Proof: i > start >= 0, so i - 1 >= 0
-            i = Range.Index(__unchecked: (), Ordinal.Position(i.position.rawValue - 1))
+            i = Range.Index(__unchecked: (), Ordinal(i.position.rawValue - 1))
         }
         return result
     }

@@ -62,7 +62,7 @@ extension Range.Lazy {
     public subscript<Tag: ~Copyable>(offset: Index<Tag>.Offset) -> Index<Tag>
     where Bound == Index<Tag> {
         precondition(offset >= .zero, "Offset must be non-negative")
-        precondition(offset.vector.rawValue < Int(count.count.rawValue), "Offset out of bounds")
+        precondition(offset.vector.rawValue < Int(bitPattern: count.count.rawValue), "Offset out of bounds")
         // Convert the Tag offset to a Range offset for internal arithmetic
         let rangeOffset = Range.Index.Offset(offset.vector)
         let position = try! start + rangeOffset  // Safe: precondition ensures non-negative result
@@ -81,11 +81,11 @@ extension Range.Lazy.Reversed {
     public subscript<Tag: ~Copyable>(offset: Index<Tag>.Offset) -> Index<Tag>
     where Bound == Index<Tag> {
         precondition(offset >= .zero, "Offset must be non-negative")
-        precondition(offset.vector.rawValue < Int(count.count.rawValue), "Offset out of bounds")
+        precondition(offset.vector.rawValue < Int(bitPattern: count.count.rawValue), "Offset out of bounds")
         // Convert offset to Range.Index arithmetic
         // Reversed subscript: end - 1 - offset
         // Proof: precondition ensures count > 0, so end > start, so end - 1 >= 0
-        let lastIndex = Range.Index(__unchecked: (), Ordinal.Position(end.position.rawValue - 1))
+        let lastIndex = Range.Index(__unchecked: (), Ordinal(end.position.rawValue - 1))
         let rangeOffset = Range.Index.Offset(offset.vector)
         let position = try! lastIndex - rangeOffset  // Safe: precondition ensures valid
         return transform(position)
