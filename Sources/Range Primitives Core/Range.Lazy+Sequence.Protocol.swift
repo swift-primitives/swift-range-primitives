@@ -54,7 +54,7 @@ extension Range.Lazy: Sequence.Clearable where Bound: Copyable {
     @inlinable
     public mutating func removeAll() {
         start = end
-        _count = .zero
+        count = .zero
     }
 }
 
@@ -74,6 +74,6 @@ extension Range.Lazy.Reversed: Sequence.Clearable where Bound: Copyable {
     @inlinable
     public mutating func removeAll() {
         start = end
-        _count = .zero
+        count = .zero
     }
 }

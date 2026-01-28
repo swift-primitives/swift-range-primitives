@@ -82,6 +82,65 @@ The comment isn't ceremony—it's documentation of the loop invariant. Future re
 
 ---
 
+## The Range.Lazy Iteration Pattern
+
+**Date**: 2026-01-27
+
+**Context**: Refactoring Pointer Primitives tests to use idiomatic iteration.
+
+The ugly pattern extracts raw values and manually creates indices:
+```swift
+for i in 0..<Int(count.rawValue) {
+    let idx: Index<Int> = try .init(i)
+    sum += ptr[idx]
+}
+```
+
+The idiomatic pattern stays in the typed domain:
+```swift
+(.zero..<count).forEach { idx in
+    sum += ptr[idx]
+}
+```
+
+The `..<` operator between `Index<Tag>` and `Index<Tag>.Count` creates a `Range.Lazy<Index<Tag>>` that yields typed indices on demand. This eliminates the Int conversion, the throwing initializer, and the manual index creation. The `.zero` is inferred from context.
+
+Why `.forEach` instead of `for-in`? The `Range.Lazy` type is a generator, not a `Sequence`. It produces indices on demand through a transform function. The `.forEach` method is the iteration API—it's not a limitation, it's the design. This avoids storing `~Copyable` values and keeps the iteration lazy.
+
+**Applies to**: `Range.Lazy` iteration, typed index generation, test code patterns.
+
+---
+
+## Predecessor vs Successor Pattern Asymmetry
+
+**Date**: 2026-01-28
+
+**Context**: Refactoring all 12 predecessor patterns in Range.Lazy to use `.predecessor.exact()`.
+
+Successor and predecessor have fundamentally different failure modes:
+
+- **Successor** of a valid index within a bounded range always succeeds (we stop before overflow)
+- **Predecessor** of index zero has no valid result
+
+This asymmetry means successor can use total arithmetic (`i += .one`) while predecessor must handle partiality (`try! i.predecessor.exact()`).
+
+Despite the asymmetry, the refactored code uses a consistent pattern:
+
+```swift
+// Successor (total):
+i += .one  // Count.one via inference
+
+// Predecessor (partial with proof):
+// Safe: i > start >= 0, so i > 0
+i = try! i.predecessor.exact()
+```
+
+Both stay in the typed domain—no `.rawValue` extraction. The difference is totality vs partiality, made visible through `+=` vs `try!`.
+
+**Applies to**: `Range.Lazy.Iterator`, `Range.Lazy.Reversed.Iterator`, successor/predecessor patterns.
+
+---
+
 ## Topics
 
 ### Related Documents

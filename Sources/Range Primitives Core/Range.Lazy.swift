@@ -99,8 +99,7 @@ extension Range {
 
         public var end: Range.Index
 
-        @usableFromInline
-        var _count: Range.Index.Count
+        @Inlined public var count: Range.Index.Count
 
         @usableFromInline
         let transform: @Sendable (Range.Index) -> Bound
@@ -173,8 +172,7 @@ extension Range {
             @usableFromInline
             var end: Range.Index
 
-            @usableFromInline
-            var _count: Range.Index.Count
+            @Inlined public var count: Range.Index.Count
 
             @usableFromInline
             let transform: @Sendable (Range.Index) -> Bound
@@ -236,10 +234,15 @@ extension Range {
             }
 
             @usableFromInline
-            init(start: Range.Index, end: Range.Index, count: Range.Index.Count, transform: @escaping @Sendable (Range.Index) -> Bound) {
+            init(
+                start: Range.Index,
+                end: Range.Index,
+                count: Range.Index.Count,
+                transform: @escaping @Sendable (Range.Index) -> Bound
+            ) {
                 self.start = start
                 self.end = end
-                self._count = count
+                self.count = count
                 self.transform = transform
             }
 
@@ -249,17 +252,13 @@ extension Range {
                 self.start = start
                 self.end = end
                 // Safe: caller guarantees end >= start, so distance.forward never throws
-                self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
+                self.count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
                 self.transform = transform
             }
 
-            /// The number of elements in the range.
-            @inlinable
-            public var count: Range.Index.Count { _count }
-
             /// A Boolean value indicating whether the range is empty.
             @inlinable
-            public var isEmpty: Bool { _count == .zero }
+            public var isEmpty: Bool { count == .zero }
 
             /// Returns an iterator over the range elements in reverse order.
             ///
@@ -298,7 +297,7 @@ extension Range {
                 }
                 // Mark as empty
                 start = end
-                _count = .zero
+                count = .zero
             }
 
             // MARK: - Property Accessors
@@ -354,7 +353,7 @@ extension Range {
         ) {
             self.start = .zero
             self.end = Range.Index(count)
-            self._count = count
+            self.count = count
             self.transform = transform
         }
 
@@ -377,7 +376,7 @@ extension Range {
             self.start = start
             self.end = end
             // Safe after validation: end >= start, so distance.forward never throws
-            self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
+            self.count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
             self.transform = transform
         }
 
@@ -394,19 +393,16 @@ extension Range {
             self.start = start
             self.end = end
             // Safe: caller guarantees end >= start, so distance.forward never throws
-            self._count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
+            self.count = Range.Index.Count(try! start.position.distance.forward(to: end.position))
             self.transform = transform
         }
 
         // MARK: - Properties
 
-        /// The number of elements in the range.
-        @inlinable
-        public var count: Range.Index.Count { _count }
 
         /// A Boolean value indicating whether the range is empty.
         @inlinable
-        public var isEmpty: Bool { _count == .zero }
+        public var isEmpty: Bool { count == .zero }
 
         // MARK: - Iterator Factory
 
@@ -434,7 +430,7 @@ extension Range {
         /// ```
         @inlinable
         public consuming func reversed() -> Reversed {
-            Reversed(start: start, end: end, count: _count, transform: transform)
+            Reversed(start: start, end: end, count: count, transform: transform)
         }
 
         // MARK: - Internal Iteration
@@ -460,7 +456,7 @@ extension Range {
             }
             // Mark as empty
             start = end
-            _count = .zero
+            count = .zero
         }
 
         // MARK: - Property Accessors
