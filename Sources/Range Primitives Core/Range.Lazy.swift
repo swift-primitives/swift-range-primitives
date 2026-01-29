@@ -271,13 +271,13 @@ extension Range {
             // MARK: - Internal Iteration
 
             @inlinable
-            mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
+            mutating func _borrowingForEach<E: Swift.Error>(_ body: (borrowing Bound) throws(E) -> Void) throws(E) {
                 guard !isEmpty else { return }
                 // Safe: !isEmpty means end > start >= 0, so end > 0
                 var i = try! end.predecessor.exact()
                 while i >= start {
                     let bound = transform(i)
-                    body(bound)
+                    try body(bound)
                     if i == start { break }
                     // Safe: i > start >= 0, so i > 0
                     i = try! i.predecessor.exact()
@@ -436,11 +436,11 @@ extension Range {
         // MARK: - Internal Iteration
 
         @inlinable
-        mutating func _borrowingForEach(_ body: (borrowing Bound) -> Void) {
+        mutating func _borrowingForEach<E: Swift.Error>(_ body: (borrowing Bound) throws(E) -> Void) throws(E) {
             var i = start
             while i < end {
                 let bound = transform(i)
-                body(bound)
+                try body(bound)
                 // Proof: i < end, so i + 1 <= end
                 i += .one
             }

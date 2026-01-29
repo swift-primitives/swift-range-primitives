@@ -27,12 +27,13 @@ extension Property where Tag == Range.ForEach {
     /// ```
     ///
     /// - Parameter body: A closure called with each element as a borrowed value.
+    /// - Throws: Rethrows any error thrown by the closure.
     @inlinable
-    public func callAsFunction<Bound: ~Copyable>(
-        _ body: (borrowing Bound) -> Void
-    ) where Base == Range.Lazy<Bound> {
+    public func callAsFunction<Bound: ~Copyable, E: Swift.Error>(
+        _ body: (borrowing Bound) throws(E) -> Void
+    ) throws(E) where Base == Range.Lazy<Bound> {
         var copy = base
-        copy._borrowingForEach(body)
+        try copy._borrowingForEach(body)
     }
 
     /// Explicit borrowing iteration: `.forEach.borrowing { }`
@@ -44,12 +45,13 @@ extension Property where Tag == Range.ForEach {
     /// ```
     ///
     /// - Parameter body: A closure called with each element as a borrowed value.
+    /// - Throws: Rethrows any error thrown by the closure.
     @inlinable
-    public func borrowing<Bound: ~Copyable>(
-        _ body: (borrowing Bound) -> Void
-    ) where Base == Range.Lazy<Bound> {
+    public func borrowing<Bound: ~Copyable, E: Swift.Error>(
+        _ body: (borrowing Bound) throws(E) -> Void
+    ) throws(E) where Base == Range.Lazy<Bound> {
         var copy = base
-        copy._borrowingForEach(body)
+        try copy._borrowingForEach(body)
     }
 
     /// Borrowing iteration on reversed range: `.forEach { }`
@@ -59,22 +61,24 @@ extension Property where Tag == Range.ForEach {
     /// ```
     ///
     /// - Parameter body: A closure called with each element as a borrowed value.
+    /// - Throws: Rethrows any error thrown by the closure.
     @inlinable
-    public func callAsFunction<Bound: ~Copyable>(
-        _ body: (borrowing Bound) -> Void
-    ) where Base == Range.Lazy<Bound>.Reversed {
+    public func callAsFunction<Bound: ~Copyable, E: Swift.Error>(
+        _ body: (borrowing Bound) throws(E) -> Void
+    ) throws(E) where Base == Range.Lazy<Bound>.Reversed {
         var copy = base
-        copy._borrowingForEach(body)
+        try copy._borrowingForEach(body)
     }
 
     /// Explicit borrowing iteration on reversed range: `.forEach.borrowing { }`
     ///
     /// - Parameter body: A closure called with each element as a borrowed value.
+    /// - Throws: Rethrows any error thrown by the closure.
     @inlinable
-    public func borrowing<Bound: ~Copyable>(
-        _ body: (borrowing Bound) -> Void
-    ) where Base == Range.Lazy<Bound>.Reversed {
+    public func borrowing<Bound: ~Copyable, E: Swift.Error>(
+        _ body: (borrowing Bound) throws(E) -> Void
+    ) throws(E) where Base == Range.Lazy<Bound>.Reversed {
         var copy = base
-        copy._borrowingForEach(body)
+        try copy._borrowingForEach(body)
     }
 }
