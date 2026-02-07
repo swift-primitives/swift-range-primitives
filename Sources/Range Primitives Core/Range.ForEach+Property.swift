@@ -16,7 +16,7 @@ public import Property_Primitives
 /// These extensions work on owned `Property` (not `.View`) because `forEach`
 /// is read-only traversal that doesn't need to mutate the range. This enables
 /// fluent usage on temporaries: `(0..<count).forEach { }`.
-extension Property where Tag == Range.ForEach {
+extension Property where Tag == Range_Primitives_Core.Range.ForEach {
 
     /// Borrowing iteration: `.forEach { }`
     ///

@@ -12,7 +12,7 @@
 public import Property_Primitives
 
 /// Property.View extensions for consuming iteration on `Range.Lazy`.
-extension Property.View where Base: ~Copyable, Tag == Range.Drain {
+extension Property.View where Base: ~Copyable, Tag == Range_Primitives_Core.Range.Drain {
 
     /// Consuming iteration: `.drain { }`
     ///

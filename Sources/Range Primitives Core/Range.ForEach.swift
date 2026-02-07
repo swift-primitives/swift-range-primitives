@@ -9,7 +9,7 @@
 //
 // ===----------------------------------------------------------------------===//
 
-extension Range {
+extension Range_Primitives_Core.Range {
     /// Tag type for `.forEach` property extensions on `Range.Lazy`.
     ///
     /// Use this tag with `Property.View` to enable borrowing iteration

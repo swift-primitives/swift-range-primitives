@@ -352,7 +352,7 @@ extension Range {
             transform: @escaping @Sendable (Range.Index) -> Bound
         ) {
             self.start = .zero
-            self.end = Range.Index(count)
+            self.end = .zero + count
             self.count = count
             self.transform = transform
         }
