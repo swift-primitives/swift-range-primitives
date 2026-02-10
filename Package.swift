@@ -22,30 +22,17 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(path: "../swift-index-primitives"),
-        .package(path: "../swift-cyclic-primitives"),
-        .package(path: "../swift-property-primitives"),
-        .package(path: "../swift-sequence-primitives"),
+        .package(path: "../swift-vector-primitives"),
     ],
     targets: [
         .target(
             name: "Range Primitives Core",
             dependencies: [
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
-                .product(name: "Cyclic Primitives", package: "swift-cyclic-primitives"),
-                .product(name: "Property Primitives", package: "swift-property-primitives"),
-                .product(name: "Sequence Primitives", package: "swift-sequence-primitives"),
+                .product(name: "Vector Primitives", package: "swift-vector-primitives"),
             ]
         ),
         .target(
             name: "Range Primitives",
-            dependencies: [
-                "Range Primitives Core",
-                "Range Primitives Standard Library Integration",
-            ]
-        ),
-        .target(
-            name: "Range Primitives Standard Library Integration",
             dependencies: [
                 "Range Primitives Core",
             ]
@@ -54,7 +41,7 @@ let package = Package(
             name: "Range Primitives Test Support",
             dependencies: [
                 "Range Primitives",
-                .product(name: "Index Primitives Test Support", package: "swift-index-primitives"),
+                .product(name: "Vector Primitives Test Support", package: "swift-vector-primitives"),
             ],
             path: "Tests/Support"
         ),
