@@ -9,11 +9,6 @@ applies_to: [swift-range-primitives]
 normative: false
 ---
 -->
-
-@Metadata {
-    @TitleHeading("Range Primitives")
-}
-
 Design decisions, implementation patterns, and lessons learned specific to this package.
 
 ## Overview
@@ -141,9 +136,7 @@ Both stay in the typed domain—no `.rawValue` extraction. The difference is tot
 
 ---
 
-## Topics
+## Related
 
-### Related Documents
-
-- <doc:Range-Lazy>
-- <doc:Range-Lazy-Reversed>
+- Range-Lazy
+- Range-Lazy-Reversed
