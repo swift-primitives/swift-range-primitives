@@ -17,6 +17,10 @@ let package = Package(
             targets: ["Range Primitives"]
         ),
         .library(
+            name: "Range Primitives Core",
+            targets: ["Range Primitives Core"]
+        ),
+        .library(
             name: "Range Primitives Test Support",
             targets: ["Range Primitives Test Support"]
         ),
