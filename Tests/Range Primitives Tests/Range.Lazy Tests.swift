@@ -18,8 +18,8 @@ import Range_Primitives_Test_Support
 @Suite("Range.Lazy Deprecation Shim")
 struct RangeLazyDeprecationTests {
 
-    @Test("Range.Lazy typealias resolves to Vector")
-    func typealiasResolvesToVector() throws {
+    @Test
+    func `Range.Lazy typealias resolves to Vector`() throws {
         let count = try Vector<UInt>.Index.Count(5)
         let vector = Vector<UInt>(count: count) { $0.position.rawValue }
 
