@@ -63,7 +63,9 @@ extension Property {
     /// - Parameter transform: A closure that transforms a bound value.
     /// - Returns: A new range with transformed bounds.
     @inlinable
-    public func bounds<Bound: Comparable, T: Comparable>(_ transform: (Bound) -> T) -> Swift.Range<T>
+    public func bounds<Bound: Comparable, T: Comparable>(
+        _ transform: (Bound) -> T
+    ) -> Swift.Range<T>
     where Tag == Swift.Range<Bound>.Map, Base == Swift.Range<Bound> {
         transform(base.lowerBound)..<transform(base.upperBound)
     }
