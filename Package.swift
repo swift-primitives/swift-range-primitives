@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-range-primitives",
+    name: "swift-range",
     platforms: [
         .macOS(.v27),
         .iOS(.v27),
@@ -13,27 +13,27 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "Range Primitives",
-            targets: ["Range Primitives"]
+            name: "Range",
+            targets: ["Range"]
         )
     ],
     dependencies: [
         .package(
-            url: "https://github.com/swift-primitives/swift-property-primitives.git",
+            url: "https://github.com/swift-molecules/swift-property.git",
             branch: "main"
         )
     ],
     targets: [
         .target(
-            name: "Range Primitives",
+            name: "Range",
             dependencies: [
-                .product(name: "Property Primitives", package: "swift-property-primitives")
+                .product(name: "Property", package: "swift-property")
             ]
         ),
         .testTarget(
-            name: "Range Primitives Tests",
+            name: "Range Tests",
             dependencies: [
-                "Range Primitives"
+                "Range"
             ]
         ),
     ],

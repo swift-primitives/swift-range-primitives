@@ -1,4 +1,4 @@
-internal import Range_Primitives
+internal import Range
 import Testing
 
 enum Fault: Swift.Error, Equatable {
@@ -6,13 +6,13 @@ enum Fault: Swift.Error, Equatable {
 }
 
 @Suite
-struct `Range Primitives Tests` {
+struct `Range Tests` {
     @Suite struct Unit {}
     @Suite struct `Edge Case` {}
     @Suite struct Integration {}
 }
 
-extension `Range Primitives Tests`.Unit {
+extension `Range Tests`.Unit {
 
     @Test
     func `forEach preserves typed throws`() {
@@ -121,7 +121,7 @@ extension `Range Primitives Tests`.Unit {
     }
 }
 
-extension `Range Primitives Tests`.`Edge Case` {
+extension `Range Tests`.`Edge Case` {
 
     @Test
     func `non-throwing forEach resolves to stdlib`() {

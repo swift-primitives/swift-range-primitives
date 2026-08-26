@@ -1,4 +1,4 @@
-# Range Primitives
+# Range
 
 ![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
 
@@ -6,14 +6,14 @@ Sequence-like terminal operations on `Swift.Range` for Swift — `.forEach { }`,
 
 Stdlib's `Swift.Range<Bound>` conforms to `Swift.Sequence` only when `Bound: Strideable` and `Bound.Stride: SignedInteger` — i.e. for integer ranges. The terminal operations in this package extend that surface with explicit method forms that work in the same constraint shape, plus the fluent `.<op>` Property.Inout accessors layered on top for composability with other primitives.
 
-This package is part of the **data-structures cohort** (`data-structures-launch-2026`) — a dependency of the typed-indexing Story 2 packages (notably vector-primitives). Range depends only on swift-property-primitives for the fluent Property.Inout accessor machinery.
+This package is part of the **data-structures cohort** (`data-structures-launch-2026`) — a dependency of the typed-indexing Story 2 packages (notably vector-primitives). Range depends only on swift-property for the fluent Property.Inout accessor machinery.
 
 ---
 
 ## Quick Start
 
 ```swift
-import Range_Primitives
+import Range
 
 let range = 1...10
 
@@ -37,7 +37,7 @@ Add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/swift-primitives/swift-range-primitives.git", branch: "main"),
+    .package(url: "https://github.com/swift-molecules/swift-range.git", branch: "main"),
 ]
 ```
 
@@ -45,7 +45,7 @@ dependencies: [
 .target(
     name: "App",
     dependencies: [
-        .product(name: "Range Primitives", package: "swift-range-primitives"),
+        .product(name: "Range", package: "swift-range"),
     ]
 )
 ```
@@ -60,7 +60,7 @@ One library product. Foundation-free. No concurrency surface. No platform condit
 
 | Product | When to import | What's in it |
 |---------|---------------|--------------|
-| `Range Primitives` | Default for application code | Extension files providing `.forEach`, `.map`, `.filter`, `.reduce`, `.contains`, `.first`, `.allSatisfy`, `.compactMap` on `Swift.Range`. |
+| `Range` | Default for application code | Extension files providing `.forEach`, `.map`, `.filter`, `.reduce`, `.contains`, `.first`, `.allSatisfy`, `.compactMap` on `Swift.Range`. |
 
 The terminal-operation surface mirrors `Swift.Sequence`'s API directly — each method shares the protocol's signature and semantics. The difference is the entry point: where `Sequence.map { }` requires the range to satisfy stdlib's full `Sequence` protocol (and `Strideable` arithmetic), the per-range overloads here work for any `Swift.Range<Bound>` where `Bound: Strideable, Bound.Stride: SignedInteger`.
 
@@ -87,7 +87,7 @@ Pre-1.0. The public API may change while the package remains on `branch: "main"`
 
 Direct dependency:
 
-- [swift-property-primitives](https://github.com/swift-primitives/swift-property-primitives) — `Property<Tag, Base>.Inout`, the phantom-tagged fluent-accessor machinery the terminal operations compose with.
+- [swift-property](https://github.com/swift-molecules/swift-property) — `Property<Tag, Base>.Inout`, the phantom-tagged fluent-accessor machinery the terminal operations compose with.
 
 Cohort siblings (Story 2 — Typed indexing and sequences) — see [`data-structures-launch-2026`](https://github.com/swift-institute) for the cohort narrative.
 
