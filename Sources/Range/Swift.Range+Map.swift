@@ -1,3 +1,5 @@
+public import Property
+
 extension Swift.Range {
 
     public enum Map {}

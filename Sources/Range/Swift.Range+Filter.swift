@@ -1,3 +1,5 @@
+public import Property
+
 extension Swift.Range where Bound: Strideable, Bound.Stride: SignedInteger {
 
     public enum Filter {}

@@ -15,11 +15,19 @@ let package = Package(
         .library(
             name: "Range",
             targets: ["Range"]
-        )
+        ),
+        .library(
+            name: "Range Standard Library Integration",
+            targets: ["Range Standard Library Integration"]
+        ),
+        .library(
+            name: "Range Apple Foundation Integration",
+            targets: ["Range Apple Foundation Integration"]
+        ),
     ],
     dependencies: [
         .package(
-            url: "https://github.com/swift-molecules/swift-property.git",
+            url: "https://github.com/swift-atoms/swift-property.git",
             branch: "main"
         )
     ],
@@ -28,6 +36,17 @@ let package = Package(
             name: "Range",
             dependencies: [
                 .product(name: "Property", package: "swift-property")
+            ]
+        ),
+        .target(
+            name: "Range Standard Library Integration",
+            dependencies: ["Range"]
+        ),
+        .target(
+            name: "Range Apple Foundation Integration",
+            dependencies: [
+                "Range",
+                "Range Standard Library Integration",
             ]
         ),
         .testTarget(
